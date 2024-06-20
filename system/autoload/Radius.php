@@ -233,7 +233,7 @@ class Radius
             if ($expired != null) {
                 //Radius::upsertCustomer($customer['username'], 'access-period', strtotime($expired) - time());
                 Radius::upsertCustomer($customer['username'], 'Max-All-Session', strtotime($expired) - time());
-                //Radius::upsertCustomer($customer['username'], 'expiration', date('d M Y H:i:s', strtotime($expired)));
+                Radius::upsertCustomer($customer['username'], 'expiration', date('d M Y H:i:s', strtotime($expired)));
                 // Mikrotik Spesific
                 Radius::upsertCustomer(
                     $customer['username'],
@@ -243,7 +243,7 @@ class Radius
             } else {
                 Radius::delAtribute(Radius::getTableCustomer(), 'Max-All-Session', 'username', $customer['username']);
                 //Radius::delAtribute(Radius::getTableCustomer(), 'access-period', 'username', $customer['username']);
-                //Radius::delAtribute(Radius::getTableCustomer(), 'expiration', 'username', $customer['username']);
+                Radius::delAtribute(Radius::getTableCustomer(), 'expiration', 'username', $customer['username']);
             }
 
             if ($plan['type'] == 'PPPOE') {
