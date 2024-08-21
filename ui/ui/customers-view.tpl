@@ -24,16 +24,16 @@
                     </li>
                     <li class="list-group-item">{Lang::nl2br($d['address'])}</li>
                     <li class="list-group-item">
-                        <b>{Lang::T('City')}</b> <span class="pull-right">{Lang::T($d['city'])}</span>
+                        <b>{Lang::T('City')}</b> <span class="pull-right">{$d['city']}</span>
                     </li>
                     <li class="list-group-item">
-                        <b>{Lang::T('District')}</b> <span class="pull-right">{Lang::T($d['district'])}</span>
+                        <b>{Lang::T('District')}</b> <span class="pull-right">{$d['district']}</span>
                     </li>
                     <li class="list-group-item">
-                        <b>{Lang::T('State')}</b> <span class="pull-right">{Lang::T($d['state'])}</span>
+                        <b>{Lang::T('State')}</b> <span class="pull-right">{$d['state']}</span>
                     </li>
                     <li class="list-group-item">
-                        <b>{Lang::T('Zip')}</b> <span class="pull-right">{Lang::T($d['zip'])}</span>
+                        <b>{Lang::T('Zip')}</b> <span class="pull-right">{$d['zip']}</span>
                     </li>
                     <li class="list-group-item">
                         <b>{Lang::T('Password')}</b> <input type="password" value="{$d['password']}"
@@ -41,12 +41,22 @@
                             onmouseleave="this.type = 'password'" onmouseenter="this.type = 'text'"
                             onclick="this.select()">
                     </li>
+                    {if $d['pppoe_username'] != ''}
+                        <li class="list-group-item">
+                            <b>PPPOE {Lang::T('Username')}</b> <span class="pull-right">{$d['pppoe_username']}</span>
+                        </li>
+                    {/if}
                     {if $d['pppoe_password'] != ''}
                         <li class="list-group-item">
                             <b>PPPOE {Lang::T('Password')}</b> <input type="password" value="{$d['pppoe_password']}"
                                 style=" border: 0px; text-align: right;" class="pull-right"
                                 onmouseleave="this.type = 'password'" onmouseenter="this.type = 'text'"
                                 onclick="this.select()">
+                        </li>
+                    {/if}
+                    {if $d['pppoe_ip'] != ''}
+                        <li class="list-group-item">
+                            <b>PPPOE Local IP</b> <span class="pull-right">{$d['pppoe_ip']}</span>
                         </li>
                     {/if}
                     <!--Customers Attributes view start -->
@@ -90,8 +100,7 @@
                         <li class="list-group-item">
                             <b>{Lang::T('Coordinates')}</b> <span class="pull-right">
                                 <i class="glyphicon glyphicon-road"></i> <a style="color: black;"
-                                    href="https://www.google.com/maps/dir//{$d['coordinates']}/" target="_blank">Get
-                                    Directions</a>
+                                    href="https://www.google.com/maps/dir//{$d['coordinates']}/" target="_blank">{Lang::T('Get Directions')}</a>
                             </span>
                             <div id="map" style="width: '100%'; height: 100px;"></div>
                         </li>
@@ -123,6 +132,10 @@
                     <li class="list-group-item">
                         {Lang::T('Type')} <span class="pull-right">
                             {if $package['prepaid'] eq yes}Prepaid{else}<b>Postpaid</b>{/if}</span>
+                    </li>
+                    <li class="list-group-item">
+                        {Lang::T('Bandwidth')} <span class="pull-right">
+                            {$package['name_bw']}</span>
                     </li>
                     <li class="list-group-item">
                         {Lang::T('Created On')} <span

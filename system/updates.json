@@ -102,5 +102,54 @@
     ],
     "2024.5.20" : [
         "ALTER TABLE `tbl_customers` ADD `city` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci AFTER `address`, ADD `district` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci AFTER `city`, ADD `state` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci AFTER `district`, ADD `zip` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci AFTER `state`;"
+    ],
+    "2024.6.5" : [
+        "ALTER TABLE `tbl_plans` ADD `price_old` VARCHAR(40) NOT NULL DEFAULT '' AFTER `price`;",
+        "ALTER TABLE `tbl_plans` ADD `device` VARCHAR(32) NOT NULL DEFAULT '' AFTER `plan_type`;"
+    ],
+    "2024.6.10" : [
+        "ALTER TABLE `tbl_pool` ADD `local_ip` VARCHAR(40) NOT NULL DEFAULT '' AFTER `pool_name`;"
+    ],
+    "2024.6.11" : [
+        "ALTER TABLE `tbl_plans` ADD `plan_expired` INT NOT NULL DEFAULT '0' AFTER `pool`;",
+        "ALTER TABLE `tbl_plans` DROP `pool_expired`, DROP `list_expired`;"
+    ],
+    "2024.6.19" : [
+        "ALTER TABLE `tbl_plans` ADD `expired_date` TINYINT(1) NOT NULL DEFAULT '20' AFTER `plan_expired`;"
+    ],
+    "2024.6.21" : [
+        "ALTER TABLE `tbl_plans` ADD `on_login` TEXT NULL DEFAULT NULL AFTER `device`;",
+        "ALTER TABLE `tbl_plans` ADD `on_logout` TEXT NULL DEFAULT NULL AFTER `on_login`;"
+    ],
+    "2024.7.6" : [
+        "CREATE TABLE IF NOT EXISTS `rad_acct` ( `id` bigint NOT NULL, `acctsessionid` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '', `username` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '', `realm` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '', `nasid` varchar(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '', `nasipaddress` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '', `nasportid` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL, `nasporttype` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL, `framedipaddress` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',`acctstatustype` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL, `macaddr` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL, `dateAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
+        "ALTER TABLE `rad_acct` ADD PRIMARY KEY (`id`), ADD KEY `username` (`username`), ADD KEY `framedipaddress` (`framedipaddress`), ADD KEY `acctsessionid` (`acctsessionid`), ADD KEY `nasipaddress` (`nasipaddress`);",
+        "ALTER TABLE `rad_acct` MODIFY `id` bigint NOT NULL AUTO_INCREMENT;"
+    ],
+    "2024.7.24" : [
+        "ALTER TABLE `tbl_voucher` ADD `used_date` DATETIME NULL DEFAULT NULL AFTER `status`;",
+        "UPDATE `tbl_voucher` SET `used_date`=now() WHERE `status`=1;"
+    ],
+    "2024.8.1" : [
+        "ALTER TABLE `tbl_payment_gateway` CHANGE `gateway_trx_id` `gateway_trx_id` VARCHAR(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '';",
+        "ALTER TABLE `tbl_payment_gateway` CHANGE `pg_url_payment` `pg_url_payment` VARCHAR(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '';"
+    ],
+    "2024.8.2" : [
+        "CREATE TABLE IF NOT EXISTS `tbl_customers_inbox` (`id` int UNSIGNED NOT NULL AUTO_INCREMENT, `customer_id` int NOT NULL, `date_created` datetime NOT NULL, `date_read` datetime DEFAULT NULL, `subject` varchar(64) COLLATE utf8mb4_general_ci NOT NULL, `body` TEXT NULL DEFAULT NULL, `from` varchar(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'System' COMMENT 'System or Admin or Else',`admin_id` int NOT NULL DEFAULT '0' COMMENT 'other than admin is 0', PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
+    ],
+    "2024.8.5" : [
+        "ALTER TABLE `tbl_customers` ADD `pppoe_username` VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'For PPPOE Login' AFTER `password`;",
+        "ALTER TABLE `tbl_customers` ADD `pppoe_ip` VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'For PPPOE Login' AFTER `pppoe_password`;"
+    ],
+    "2024.8.5.1" : [
+        "ALTER TABLE `tbl_routers` ADD `coordinates` VARCHAR(50) NOT NULL DEFAULT '' AFTER `description`;",
+        "ALTER TABLE `tbl_routers` ADD `coverage` VARCHAR(8) NOT NULL DEFAULT '0' AFTER `coordinates`;"
+    ],
+    "2024.8.6" : [
+        "ALTER TABLE `rad_acct` ADD `acctinputoctets` BIGINT NOT NULL DEFAULT '0' AFTER `framedipaddress`;",
+        "ALTER TABLE `rad_acct` ADD `acctoutputoctets` BIGINT NOT NULL DEFAULT '0' AFTER `acctinputoctets`;"
+    ],
+    "2024.8.7" : [
+        "ALTER TABLE `tbl_customers` CHANGE `coordinates` `coordinates` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'Latitude and Longitude coordinates';"
     ]
 }

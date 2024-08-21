@@ -42,25 +42,25 @@
 					</div>
 					<div class="form-group">
 						<label for="dbhost">Database Host</label>
-						<input type="text" class="form-control" id="dbhost" name="dbhost">
+						<input type="text" class="form-control" id="dbhost" required name="dbhost">
 					</div>
 					<div class="form-group">
 						<label for="dbuser">Database Username</label>
-						<input type="text" class="form-control" id="dbuser" name="dbuser">
+						<input type="text" class="form-control" id="dbuser" required name="dbuser">
 					</div>
 					<div class="form-group">
 						<label for="dbpass">Database Password</label>
-						<input type="text" class="form-control" id="dbpass" name="dbpass">
+						<input type="text" class="form-control" id="dbpass" required name="dbpass">
 					</div>
 
 					<div class="form-group">
 						<label for="dbname">Database Name</label>
-						<input type="text" class="form-control" id="dbname" name="dbname">
+						<input type="text" class="form-control" id="dbname" required name="dbname">
 					</div>
 
                     <div class="form-group">
-						<label for="dbname"><input type="checkbox" class="form-control" id="radius" name="radius" value="yes"> Install Radius Table?</label>
-
+						<label for="radius"><input type="checkbox" class="form-" id="radius" name="radius" value="yes"> Install <a href="https://github.com/hotspotbilling/phpnuxbill/wiki/FreeRadius" target="_blank">Radius</a> Table?</label>
+						<span class='help-block'>You Don't need this if you planning to use <a href="https://github.com/hotspotbilling/phpnuxbill/wiki/FreeRadius-Rest" target="_blank">FreeRadius REST</a></span>
 					</div>
 
 					<button type="submit" class="btn btn-primary">Submit</button>

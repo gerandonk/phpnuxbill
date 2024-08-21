@@ -10,13 +10,13 @@ class User
 {
     public static function getID()
     {
-        global $db_password;
+        global $db_pass;
         if (isset($_SESSION['uid']) && !empty($_SESSION['uid'])) {
             return $_SESSION['uid'];
         } else if (isset($_COOKIE['uid'])) {
             // id.time.sha1
             $tmp = explode('.', $_COOKIE['uid']);
-            if (sha1($tmp[0] . '.' . $tmp[1] . '.' . $db_password) == $tmp[2]) {
+            if (sha1($tmp[0] . '.' . $tmp[1] . '.' . $db_pass) == $tmp[2]) {
                 if (time() - $tmp[1] < 86400 * 30) {
                     $_SESSION['uid'] = $tmp[0];
                     return $tmp[0];
@@ -54,6 +54,22 @@ class User
             }
         }
         return [$bills, $addcost];
+    }
+
+    public static function getBillNames($id = 0)
+    {
+        if (!$id) {
+            $id = User::getID();
+            if (!$id) {
+                return [];
+            }
+        }
+        $bills = [];
+        $attrs = User::getAttributes('Bill', $id);
+        foreach ($attrs as $k => $v) {
+            $bills[] = str_replace(' Bill', '', $k);
+        }
+        return $bills;
     }
 
     public static function billsPaid($bills, $id = 0)
@@ -107,7 +123,7 @@ class User
         return 0;
     }
 
-    public static function getAttribute($name, $id = 0)
+    public static function getAttribute($name, $id = 0, $default = '')
     {
         if (!$id) {
             $id = User::getID();
@@ -119,7 +135,7 @@ class User
         if ($f) {
             return $f['field_value'];
         }
-        return '';
+        return $default;
     }
 
     public static function getAttributes($endWith, $id = 0)
@@ -143,10 +159,10 @@ class User
 
     public static function setCookie($uid)
     {
-        global $db_password;
+        global $db_pass;
         if (isset($uid)) {
             $time = time();
-            setcookie('uid', $uid . '.' . $time . '.' . sha1($uid . '.' . $time . '.' . $db_password), time() + 86400 * 30);
+            setcookie('uid', $uid . '.' . $time . '.' . sha1($uid . '.' . $time . '.' . $db_pass), time() + 86400 * 30);
         }
     }
 
@@ -180,6 +196,11 @@ class User
         return $d;
     }
 
+    public static function isUserVoucher($kode) {
+        $regex = '/^GC\d+C.{10}$/';
+        return preg_match($regex, $kode);
+    }
+
     public static function _billing($id = 0)
     {
         if (!$id) {
@@ -189,13 +210,14 @@ class User
             ->select('tbl_user_recharges.id', 'id')
             ->selects([
                 'customer_id', 'username', 'plan_id', 'namebp', 'recharged_on', 'recharged_time', 'expiration', 'time',
-                'status', 'method', 'plan_type',
+                'status', 'method', 'plan_type', 'name_bw',
                 ['tbl_user_recharges.routers', 'routers'],
                 ['tbl_user_recharges.type', 'type'],
                 'admin_id', 'prepaid'
             ])
             ->where('customer_id', $id)
             ->left_outer_join('tbl_plans', array('tbl_plans.id', '=', 'tbl_user_recharges.plan_id'))
+            ->left_outer_join('tbl_bandwidth', array('tbl_bandwidth.id', '=', 'tbl_plans.id_bw'))
             ->find_many();
         return $d;
     }

@@ -12,6 +12,46 @@ $action = $routes['1'];
 $ui->assign('_admin', $admin);
 
 switch ($action) {
+    case 'docs':
+        $d = ORM::for_table('tbl_appconfig')->where('setting', 'docs_clicked')->find_one();
+        if ($d) {
+            $d->value = 'yes';
+            $d->save();
+        } else {
+            $d = ORM::for_table('tbl_appconfig')->create();
+            $d->setting = 'docs_clicked';
+            $d->value = 'yes';
+            $d->save();
+        }
+        r2('./docs');
+        break;
+    case 'devices':
+        $files = scandir($DEVICE_PATH);
+        $devices = [];
+        foreach ($files as $file) {
+            $ext = pathinfo($file, PATHINFO_EXTENSION);
+            if ($ext == 'php') {
+                $dev = pathinfo($file, PATHINFO_FILENAME);
+                require_once $DEVICE_PATH . DIRECTORY_SEPARATOR . $file;
+                $dvc = new $dev;
+                if(method_exists($dvc, 'description')){
+                    $arr = $dvc->description();
+                    $arr['file'] = $dev;
+                    $devices[] = $arr;
+                }else{
+                    $devices[] = [
+                        'title' => $dev,
+                        'description' => '',
+                        'author' => 'unknown',
+                        'url' => [],
+                        'file' => $dev
+                    ];
+                }
+            }
+        }
+        $ui->assign('devices', $devices);
+        $ui->display('app-devices.tpl');
+        break;
     case 'app':
         if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin'])) {
             _alert(Lang::T('You do not have permission to access this page'), 'danger', "dashboard");
@@ -41,14 +81,6 @@ switch ($action) {
             $logo = $UPLOAD_URL_PATH . DIRECTORY_SEPARATOR . 'logo.default.png';
         }
         $ui->assign('logo', $logo);
-        if ($config['radius_enable'] && empty($config['radius_client'])) {
-            try {
-                $config['radius_client'] = Radius::getClient();
-                $ui->assign('_c', $_c);
-            } catch (Exception $e) {
-                //ignore
-            }
-        }
         $themes = [];
         $files = scandir('ui/themes/');
         foreach ($files as $file) {
@@ -92,9 +124,12 @@ switch ($action) {
             _alert(Lang::T('You do not have permission to access this page'), 'danger', "dashboard");
         }
         $company = _post('CompanyName');
+        $custom_tax_rate = filter_var(_post('custom_tax_rate'), FILTER_SANITIZE_SPECIAL_CHARS);
+        if (preg_match('/[^0-9.]/', $custom_tax_rate)) {
+            r2(U . 'settings/app', 'e', 'Special characters are not allowed in tax rate');
+            die();
+        }
         run_hook('save_settings'); #HOOK
-
-
         if (!empty($_FILES['logo']['name'])) {
             if (function_exists('imagecreatetruecolor')) {
                 if (file_exists($UPLOAD_PATH . DIRECTORY_SEPARATOR . 'logo.png')) unlink($UPLOAD_PATH . DIRECTORY_SEPARATOR . 'logo.png');
@@ -109,7 +144,8 @@ switch ($action) {
         } else {
             if ($radius_enable) {
                 try {
-                    Radius::getTableNas()->find_many();
+                    require_once $DEVICE_PATH . DIRECTORY_SEPARATOR . "Radius.php";
+                    (new Radius())->getTableNas()->find_many();
                 } catch (Exception $e) {
                     $ui->assign("error_title", "RADIUS Error");
                     $ui->assign("error_message", "Radius table not found.<br><br>" .
@@ -119,7 +155,9 @@ switch ($action) {
                     die();
                 }
             }
-            // Save all settings including tax system
+             // Save all settings including tax system
+            $enable_session_timeout = isset($_POST['enable_session_timeout']) ? 1 : 0;
+            $_POST['enable_session_timeout'] = $enable_session_timeout;
             foreach ($_POST as $key => $value) {
                 $d = ORM::for_table('tbl_appconfig')->where('setting', $key)->find_one();
                 if ($d) {
@@ -267,8 +305,8 @@ switch ($action) {
             $d->value = $lan;
             $d->save();
             unset($_SESSION['Lang']);
-            _log('[' . $admin['username'] . ']: ' . Lang::T('Settings Saved Successfully'), $admin['user_type'], $admin['id']);
-            r2(U . 'settings/localisation', 's', Lang::T('Settings Saved Successfully'));
+            _log('[' . $admin['username'] . ']: ' . 'Settings Saved Successfully', $admin['user_type'], $admin['id']);
+            r2(U . 'settings/localisation', 's', 'Settings Saved Successfully');
         }
         break;
 
@@ -339,7 +377,7 @@ switch ($action) {
         $ui->assign('d', $d);
         $ui->assign('search', $search);
         run_hook('view_list_admin'); #HOOK
-        $ui->display('users.tpl');
+        $ui->display('admin.tpl');
         break;
 
     case 'users-add':
@@ -348,7 +386,7 @@ switch ($action) {
         }
         $ui->assign('_title', Lang::T('Add User'));
         $ui->assign('agents', ORM::for_table('tbl_users')->where('user_type', 'Agent')->find_many());
-        $ui->display('users-add.tpl');
+        $ui->display('admin-add.tpl');
         break;
     case 'users-view':
         $ui->assign('_title', Lang::T('Edit User'));
@@ -375,7 +413,7 @@ switch ($action) {
             }
             $ui->assign('d', $d);
             $ui->assign('_title', $d['username']);
-            $ui->display('users-view.tpl');
+            $ui->display('admin-view.tpl');
         } else {
             r2(U . 'settings/users', 'e', Lang::T('Account Not Found'));
         }
@@ -412,7 +450,7 @@ switch ($action) {
             $ui->assign('id', $id);
             $ui->assign('d', $d);
             run_hook('view_edit_admin'); #HOOK
-            $ui->display('users-edit.tpl');
+            $ui->display('admin-edit.tpl');
         } else {
             r2(U . 'settings/users', 'e', Lang::T('Account Not Found'));
         }
@@ -663,7 +701,7 @@ switch ($action) {
             _alert(Lang::T('You do not have permission to access this page'), 'danger', "dashboard");
         }
 
-        $dbc = new mysqli($db_host, $db_user, $db_password, $db_name);
+        $dbc = new mysqli($db_host, $db_user, $db_pass, $db_name);
         if ($result = $dbc->query('SHOW TABLE STATUS')) {
             $tables = array();
             while ($row = $result->fetch_array()) {

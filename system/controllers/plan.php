@@ -37,27 +37,30 @@ switch ($action) {
             _alert(Lang::T('You do not have permission to access this page'), 'danger', "dashboard");
         }
         set_time_limit(-1);
-        $plans = ORM::for_table('tbl_user_recharges')->where('status', 'on')->find_many();
+        $turs = ORM::for_table('tbl_user_recharges')->where('status', 'on')->find_many();
         $log = '';
         $router = '';
-        foreach ($plans as $plan) {
-            if ($router != $plan['routers'] && $plan['routers'] != 'radius') {
-                $mikrotik = Mikrotik::info($plan['routers']);
-                $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
-                $router = $plan['routers'];
-            }
-            $p = ORM::for_table('tbl_plans')->findOne($plan['plan_id']);
-            $c = ORM::for_table('tbl_customers')->findOne($plan['customer_id']);
-            if ($plan['routers'] == 'radius') {
-                Radius::customerAddPlan($c, $p, $plan['expiration'] . ' ' . $plan['time']);
-            } else {
-                if ($plan['type'] == 'Hotspot') {
-                    Mikrotik::addHotspotUser($client, $p, $c);
-                } else if ($plan['type'] == 'PPPOE') {
-                    Mikrotik::addPpoeUser($client, $p, $c);
+        foreach ($turs as $tur) {
+            $p = ORM::for_table('tbl_plans')->findOne($tur['plan_id']);
+            if ($p) {
+                $c = ORM::for_table('tbl_customers')->findOne($tur['customer_id']);
+                if ($c) {
+                    $dvc = Package::getDevice($p);
+                    if ($_app_stage != 'demo') {
+                        if (file_exists($dvc)) {
+                            require_once $dvc;
+                            (new $p['device'])->add_customer($c, $p);
+                        } else {
+                            new Exception(Lang::T("Devices Not Found"));
+                        }
+                    }
+                    $log .= "DONE : $tur[username], $ptur[namebp], $tur[type], $tur[routers]<br>";
+                } else {
+                    $log .= "Customer NOT FOUND : $tur[username], $tur[namebp], $tur[type], $tur[routers]<br>";
                 }
+            } else {
+                $log .= "PLAN NOT FOUND : $tur[username], $tur[namebp], $tur[type], $tur[routers]<br>";
             }
-            $log .= "DONE : $plan[username], $plan[namebp], $plan[type], $plan[routers]<br>";
         }
         r2(U . 'plan/list', 's', $log);
     case 'recharge':
@@ -70,7 +73,7 @@ switch ($action) {
         }
         $usings = explode(',', $config['payment_usings']);
         $usings = array_filter(array_unique($usings));
-        if(count($usings)==0){
+        if (count($usings) == 0) {
             $usings[] = Lang::T('Cash');
         }
         $ui->assign('usings', $usings);
@@ -116,7 +119,7 @@ switch ($action) {
             }
             $usings = explode(',', $config['payment_usings']);
             $usings = array_filter(array_unique($usings));
-            if(count($usings)==0){
+            if (count($usings) == 0) {
                 $usings[] = Lang::T('Cash');
             }
             $ui->assign('usings', $usings);
@@ -242,12 +245,20 @@ switch ($action) {
         $d = ORM::for_table('tbl_user_recharges')->find_one($id);
         if ($d) {
             $ui->assign('d', $d);
+            $p = ORM::for_table('tbl_plans')->find_one($d['plan_id']);
             if (in_array($admin['user_type'], array('SuperAdmin', 'Admin'))) {
-                $p = ORM::for_table('tbl_plans')->where_not_equal('type', 'Balance')->find_many();
+                $ps = ORM::for_table('tbl_plans')
+                    ->where('type', $p['type'])
+                    ->where('is_radius', $p['is_radius'])
+                    ->find_many();
             } else {
-                $p = ORM::for_table('tbl_plans')->where('enabled', '1')->where_not_equal('type', 'Balance')->find_many();
+                $ps = ORM::for_table('tbl_plans')
+                    ->where("enabled", 1)
+                    ->where('is_radius', $p['is_radius'])
+                    ->where('type', $p['type'])
+                    ->find_many();
             }
-            $ui->assign('p', $p);
+            $ui->assign('p', $ps);
             run_hook('view_edit_customer_plan'); #HOOK
             $ui->assign('_title', 'Edit Plan');
             $ui->display('plan-edit.tpl');
@@ -265,18 +276,14 @@ switch ($action) {
         if ($d) {
             run_hook('delete_customer_active_plan'); #HOOK
             $p = ORM::for_table('tbl_plans')->find_one($d['plan_id']);
-            if ($p['is_radius']) {
-                Radius::customerDeactivate($d['username']);
-            } else {
-                $mikrotik = Mikrotik::info($d['routers']);
-                if ($d['type'] == 'Hotspot') {
-                    $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
-                    Mikrotik::removeHotspotUser($client, $d['username']);
-                    Mikrotik::removeHotspotActiveUser($client, $d['username']);
+            $c = User::_info($d['customer_id']);
+            $dvc = Package::getDevice($p);
+            if ($_app_stage != 'demo') {
+                if (file_exists($dvc)) {
+                    require_once $dvc;
+                    (new $p['device'])->remove_customer($c, $p);
                 } else {
-                    $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
-                    Mikrotik::removePpoeUser($client, $d['username']);
-                    Mikrotik::removePpoeActive($client, $d['username']);
+                    new Exception(Lang::T("Devices Not Found"));
                 }
             }
             $d->delete();
@@ -289,7 +296,6 @@ switch ($action) {
         if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin'])) {
             _alert(Lang::T('You do not have permission to access this page'), 'danger', "dashboard");
         }
-        $username = _post('username');
         $id_plan = _post('id_plan');
         $recharged_on = _post('recharged_on');
         $expiration = _post('expiration');
@@ -301,17 +307,14 @@ switch ($action) {
         } else {
             $msg .= Lang::T('Data Not Found') . '<br>';
         }
-        $p = ORM::for_table('tbl_plans')->where('id', $id_plan)->where('enabled', '1')->find_one();
-        if ($d) {
+        $oldPlanID = $d['plan_id'];
+        $newPlan = ORM::for_table('tbl_plans')->where('id', $id_plan)->find_one();
+        if ($newPlan) {
         } else {
             $msg .= ' Plan Not Found<br>';
         }
         if ($msg == '') {
             run_hook('edit_customer_plan'); #HOOK
-            $d->username = $username;
-            $d->plan_id = $id_plan;
-            $d->namebp = $p['name_plan'];
-            //$d->recharged_on = $recharged_on;
             $d->expiration = $expiration;
             $d->time = $time;
             if ($d['status'] == 'off') {
@@ -319,15 +322,37 @@ switch ($action) {
                     $d->status = 'on';
                 }
             }
-            if ($p['is_radius']) {
-                $d->routers = 'radius';
-            } else {
-                $d->routers = $p['routers'];
+            // plan different then do something
+            if ($oldPlanID != $id_plan) {
+                $d->plan_id = $newPlan['id'];
+                $d->namebp = $newPlan['name_plan'];
+                $customer = User::_info($d['customer_id']);
+                //remove from old plan
+                if ($d['status'] == 'on') {
+                    $p = ORM::for_table('tbl_plans')->find_one($oldPlanID);
+                    $dvc = Package::getDevice($p);
+                    if ($_app_stage != 'demo') {
+                        if (file_exists($dvc)) {
+                            require_once $dvc;
+                            $p['plan_expired'] = 0;
+                            (new $p['device'])->remove_customer($customer, $p);
+                        } else {
+                            new Exception(Lang::T("Devices Not Found"));
+                        }
+                    }
+                    //add new plan
+                    $dvc = Package::getDevice($newPlan);
+                    if ($_app_stage != 'demo') {
+                        if (file_exists($dvc)) {
+                            require_once $dvc;
+                            (new $newPlan['device'])->add_customer($customer, $newPlan);
+                        } else {
+                            new Exception(Lang::T("Devices Not Found"));
+                        }
+                    }
+                }
             }
             $d->save();
-            if ($d['status'] == 'on') {
-                Package::changeTo($username, $id_plan, $id);
-            }
             _log('[' . $admin['username'] . ']: ' . 'Edit Plan for Customer ' . $d['username'] . ' to [' . $d['namebp'] . '][' . Lang::moneyFormat($p['price']) . ']', $admin['user_type'], $admin['id']);
             r2(U . 'plan/list', 's', Lang::T('Data Updated Successfully'));
         } else {
@@ -338,12 +363,50 @@ switch ($action) {
     case 'voucher':
         $ui->assign('_title', Lang::T('Vouchers'));
         $search = _req('search');
+        $router = _req('router');
+        $customer = _req('customer');
+        $plan = _req('plan');
+        $status = _req('status');
+        $ui->assign('router', $router);
+        $ui->assign('customer', $customer);
+        $ui->assign('status', $status);
+        $ui->assign('plan', $plan);
+
+        $query = ORM::for_table('tbl_plans')
+            ->left_outer_join('tbl_voucher', array('tbl_plans.id', '=', 'tbl_voucher.id_plan'));
+
+        if (!empty($router)) {
+            $query->where('tbl_voucher.routers', $router);
+        }
+
+        if ($status == '1' || $status == '0') {
+            $query->where('tbl_voucher.status', $status);
+        }
+
+        if (!empty($plan)) {
+            $query->where('tbl_voucher.id_plan', $plan);
+        }
+
+        if (!empty($customer)) {
+            $query->where('tbl_voucher.user', $customer);
+        }
+
+        $append_url = "&search=" . urlencode($search) . "&router=" . urlencode($router) . "&customer=" . urlencode($customer) . "&plan=" . urlencode($plan) . "&status=" . urlencode($status);
+
+        // option customers
+        $ui->assign('customers',  ORM::for_table('tbl_voucher')->distinct()->select("user")->whereNotEqual("user", '0')->findArray());
+        // option plans
+        $plns = ORM::for_table('tbl_voucher')->distinct()->select("id_plan")->findArray();
+        if (count($plns) > 0) {
+            $ui->assign('plans', ORM::for_table('tbl_plans')->selects(["id", 'name_plan'])->where_in('id', array_column($plns, 'id_plan'))->findArray());
+        } else {
+            $ui->assign('plans', []);
+        }
+        $ui->assign('routers', array_column(ORM::for_table('tbl_voucher')->distinct()->select("routers")->findArray(), 'routers'));
+
         if ($search != '') {
             if (in_array($admin['user_type'], ['SuperAdmin', 'Admin'])) {
-                $query = ORM::for_table('tbl_plans')->where('enabled', '1')
-                    ->left_outer_join('tbl_voucher', array('tbl_plans.id', '=', 'tbl_voucher.id_plan'))
-                    ->where_like('tbl_voucher.code', '%' . $search . '%');
-                $d = Paginator::findMany($query, ["search" => $search]);
+                $query->where_like('tbl_voucher.code', '%' . $search . '%');
             } else if ($admin['user_type'] == 'Agent') {
                 $sales = [];
                 $sls = ORM::for_table('tbl_users')->select('id')->where('root', $admin['id'])->findArray();
@@ -351,17 +414,11 @@ switch ($action) {
                     $sales[] = $s['id'];
                 }
                 $sales[] = $admin['id'];
-                $query = ORM::for_table('tbl_plans')
-                    ->left_outer_join('tbl_voucher', array('tbl_plans.id', '=', 'tbl_voucher.id_plan'))
-                    ->where_in('generated_by', $sales)
+                $query->where_in('generated_by', $sales)
                     ->where_like('tbl_voucher.code', '%' . $search . '%');
-                $d = Paginator::findMany($query, ["search" => $search]);
             }
         } else {
             if (in_array($admin['user_type'], ['SuperAdmin', 'Admin'])) {
-                $query = ORM::for_table('tbl_plans')->where('enabled', '1')
-                    ->left_outer_join('tbl_voucher', array('tbl_plans.id', '=', 'tbl_voucher.id_plan'));
-                $d = Paginator::findMany($query);
             } else if ($admin['user_type'] == 'Agent') {
                 $sales = [];
                 $sls = ORM::for_table('tbl_users')->select('id')->where('root', $admin['id'])->findArray();
@@ -369,12 +426,10 @@ switch ($action) {
                     $sales[] = $s['id'];
                 }
                 $sales[] = $admin['id'];
-                $query = ORM::for_table('tbl_plans')
-                    ->left_outer_join('tbl_voucher', array('tbl_plans.id', '=', 'tbl_voucher.id_plan'))
-                    ->where_in('generated_by', $sales);
-                $d = Paginator::findMany($query);
+                $query->where_in('generated_by', $sales);
             }
         }
+        $d = Paginator::findMany($query, ["search" => $search], 10, $append_url);
         // extract admin
         $admins = [];
         foreach ($d as $k) {
@@ -397,6 +452,7 @@ switch ($action) {
                 $admins[$adm['id']] = $adm['fullname'] . $tipe;
             }
         }
+
         $ui->assign('admins', $admins);
         $ui->assign('d', $d);
         $ui->assign('search', $search);
@@ -424,7 +480,10 @@ switch ($action) {
         if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin'])) {
             _alert(Lang::T('You do not have permission to access this page'), 'danger', "dashboard");
         }
-        $d = ORM::for_table('tbl_voucher')->where_equal('status', '1')->findMany();
+        $time3months = strtotime('-3 months');
+        $d = ORM::for_table('tbl_voucher')->where_equal('status', '1')
+            ->where_raw("UNIX_TIMESTAMP(used_date) < $time3months")
+            ->findMany();
         if ($d) {
             $jml = 0;
             foreach ($d as $v) {
@@ -576,13 +635,12 @@ switch ($action) {
             }
             run_hook('create_voucher'); #HOOK
             $vouchers = [];
-            if($voucher_format == 'numbers'){
-                if (strlen($lengthcode)<6) {
+            if ($voucher_format == 'numbers') {
+                if (strlen($lengthcode) < 6) {
                     $msg .= 'The Length Code must be a more than 6 for numbers' . '<br>';
                 }
                 $vouchers = generateUniqueNumericVouchers($numbervoucher, $lengthcode);
-            }
-            else {
+            } else {
                 for ($i = 0; $i < $numbervoucher; $i++) {
                     $code = strtoupper(substr(md5(time() . rand(10000, 99999)), 0, $lengthcode));
                     if ($voucher_format == 'low') {
@@ -591,11 +649,10 @@ switch ($action) {
                         $code = Lang::randomUpLowCase($code);
                     }
                     $vouchers[] = $code;
-
                 }
             }
 
-            foreach($vouchers as $code){
+            foreach ($vouchers as $code) {
                 $d = ORM::for_table('tbl_voucher')->create();
                 $d->type = $type;
                 $d->routers = $server;
@@ -699,9 +756,9 @@ switch ($action) {
         if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin', 'Agent', 'Sales'])) {
             _alert(Lang::T('You do not have permission to access this page'), 'danger', "dashboard");
         }
-        $code = _post('code');
+        $code = Text::alphanumeric(_post('code'), "-_.,");
         $user = ORM::for_table('tbl_customers')->where('id', _post('id_customer'))->find_one();
-        $v1 = ORM::for_table('tbl_voucher')->where('code', $code)->where('status', 0)->find_one();
+        $v1 = ORM::for_table('tbl_voucher')->whereRaw("BINARY `code` = '$code'")->where('status', 0)->find_one();
 
         run_hook('refill_customer'); #HOOK
         if ($v1) {
@@ -754,7 +811,7 @@ switch ($action) {
                 $c = ORM::for_table('tbl_customers')->where('id', $user)->find_one();
                 $in = ORM::for_table('tbl_transactions')->where('username', $c['username'])->order_by_desc('id')->find_one();
                 Package::createInvoice($in);
-                if(!empty($stoken)){
+                if (!empty($stoken)) {
                     App::setToken($stoken, $in['id']);
                 }
                 $ui->display('invoice.tpl');
@@ -782,33 +839,36 @@ switch ($action) {
                 //expired
                 $expiration = date('Y-m-d', strtotime(" +$days day"));
             }
-            $tur->expiration = $expiration;
-            $tur->status = "on";
-            $tur->save();
             App::setToken($stoken, $id);
-            if ($tur['routers'] != 'radius') {
-                $mikrotik = Mikrotik::info($tur['routers']);
-                $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
-                $router = $tur['routers'];
-            }
-            $p = ORM::for_table('tbl_plans')->findOne($tur['plan_id']);
             $c = ORM::for_table('tbl_customers')->findOne($tur['customer_id']);
-            if ($tur['routers'] == 'radius') {
-                Radius::customerAddPlan($c, $p, $tur['expiration'] . ' ' . $tur['time']);
-            } else {
-                if ($tur['type'] == 'Hotspot') {
-                    Mikrotik::removeHotspotUser($client, $c['username']);
-                    Mikrotik::removeHotspotActiveUser($client, $c['username']);
-                    Mikrotik::addHotspotUser($client, $p, $c);
-                } else if ($tur['type'] == 'PPPOE') {
-                    Mikrotik::removePpoeUser($client, $c['username']);
-                    Mikrotik::removePpoeActive($client, $c['username']);
-                    Mikrotik::addPpoeUser($client, $p, $c);
+            if ($c) {
+                $p = ORM::for_table('tbl_plans')->find_one($tur['plan_id']);
+                if ($p) {
+                    $dvc = Package::getDevice($p);
+                    if ($_app_stage != 'demo') {
+                        if (file_exists($dvc)) {
+                            require_once $dvc;
+                            (new $p['device'])->add_customer($c, $p);
+                        } else {
+                            new Exception(Lang::T("Devices Not Found"));
+                        }
+                    }
+                    $tur->expiration = $expiration;
+                    $tur->status = "on";
+                    $tur->save();
+                } else {
+                    r2(U . 'plan', 's', "Plan not found");
                 }
+            } else {
+                r2(U . 'plan', 's', "Customer not found");
             }
+            Message::sendTelegram("#u$tur[username] #extend #" . $p['type'] . " \n" . $p['name_plan'] .
+                "\nLocation: " . $p['routers'] .
+                "\nCustomer: " . $c['fullname'] .
+                "\nNew Expired: " . Lang::dateAndTimeFormat($expiration, $tur['time']));
             _log("$admin[fullname] extend Customer $tur[customer_id] $tur[username] for $days days", $admin['user_type'], $admin['id']);
             r2(U . 'plan', 's', "Extend until $expiration");
-        }else{
+        } else {
             r2(U . 'plan', 's', "Customer is not expired yet");
         }
         break;
@@ -816,18 +876,44 @@ switch ($action) {
         $ui->assign('xfooter', '<script type="text/javascript" src="ui/lib/c/plan.js"></script>');
         $ui->assign('_title', Lang::T('Customer'));
         $search = _post('search');
-        if ($search != '') {
-            $query = ORM::for_table('tbl_user_recharges')
-            ->whereRaw("username LIKE '%$search%' OR namebp LIKE '%$search%' OR method LIKE '%$search%' OR routers LIKE '%$search%' OR type LIKE '%$search%'")
-            ->order_by_desc('id');
-            $d = Paginator::findMany($query, ['search' => $search]);
+        $status = _req('status');
+        $router = _req('router');
+        $plan = _req('plan');
+        $append_url = "&search=" . urlencode($search)
+            . "&status=" . urlencode($status)
+            . "&router=" . urlencode($type3)
+            . "&plan=" . urlencode($plan);
+        $ui->assign('append_url', $append_url);
+        $ui->assign('plan', $plan);
+        $ui->assign('status', $status);
+        $ui->assign('router', $router);
+        $ui->assign('search', $search);
+        $ui->assign('routers', array_column(ORM::for_table('tbl_user_recharges')->distinct()->select("routers")->whereNotEqual('routers', '')->findArray(), 'routers'));
+
+        $plns = ORM::for_table('tbl_user_recharges')->distinct()->select("plan_id")->findArray();
+        $ids = array_column($plns, 'plan_id');
+        if (count($ids)) {
+            $ui->assign('plans', ORM::for_table('tbl_plans')->select("id")->select('name_plan')->where_id_in($ids)->findArray());
         } else {
-            $query = ORM::for_table('tbl_user_recharges')->order_by_desc('id');
-            $d = Paginator::findMany($query);
+            $ui->assign('plans', []);
         }
+        $query = ORM::for_table('tbl_user_recharges')->order_by_desc('id');
+
+        if ($search != '') {
+            $query->where_like("username", "%$search%");
+        }
+        if (!empty($router)) {
+            $query->where('routers', $router);
+        }
+        if (!empty($plan)) {
+            $query->where('plan_id', $plan);
+        }
+        if (!empty($status) && $status != '-') {
+            $query->where('status', $status);
+        }
+        $d = Paginator::findMany($query, ['search' => $search], 25, $append_url);
         run_hook('view_list_billing'); #HOOK
         $ui->assign('d', $d);
-        $ui->assign('search', $search);
         $ui->display('plan.tpl');
         break;
 }

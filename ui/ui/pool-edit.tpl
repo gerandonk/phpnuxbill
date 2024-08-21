@@ -15,6 +15,12 @@
 						</div>
                     </div>
                     <div class="form-group">
+						<label class="col-md-2 control-label">{Lang::T('Local IP')}</label>
+						<div class="col-md-6">
+							<input type="text" class="form-control" id="local_ip" name="local_ip" value="{$d['local_ip']}" placeholder="192.168.88.1">
+						</div>
+                    </div>
+                    <div class="form-group">
 						<label class="col-md-2 control-label">{Lang::T('Range IP')}</label>
 						<div class="col-md-6">
 							<input type="text" class="form-control" id="ip_address" name="ip_address" value="{$d['range_ip']}">
@@ -26,7 +32,7 @@
 							<input type="text" class="form-control" id="routers" name="routers" value="{$d['routers']}" readonly>
 						</div>
                         {if $_c['radius_enable']}
-                            <p class="help-block col-md-4">For Radius, you need to add <b>Pool Name</b> in Mikrotik manually</p>
+                            <p class="help-block col-md-4">{Lang::T('For Radius, you need to add')} <b>{Lang::T('Name')} Pool</b> {Lang::T('in Mikrotik manually')}</p>
                         {/if}
                     </div>
 

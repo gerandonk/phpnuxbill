@@ -16,8 +16,8 @@
                         <label class="col-md-2 control-label">{Lang::T('Expired Notification Message')}</label>
                         <div class="col-md-6">
                             <textarea class="form-control" id="expired" name="expired"
-                                placeholder="Hello [[name]], your internet package [[package]] has been expired"
-                                rows="4">{if $_json['expired']!=''}{Lang::htmlspecialchars($_json['expired'])}{else}Hello [[name]], your internet package [[package]] has been expired.{/if}</textarea>
+                                placeholder="{Lang::T('Hello')} [[name]], {Lang::T('your internet package')} [[package]] {Lang::T('has been expired')}"
+                                rows="4">{if $_json['expired']!=''}{Lang::htmlspecialchars($_json['expired'])}{else}{Lang::T('Hello')} [[name]], {Lang::T('your internet package')} [[package]] {Lang::T('has been expired')}.{/if}</textarea>
                         </div>
                         <p class="help-block col-md-4">
                             <b>[[name]]</b> - {Lang::T('will be replaced with Customer Name')}.<br>
@@ -84,7 +84,7 @@
                         <label class="col-md-2 control-label">{Lang::T('Invoice Notification Payment')}</label>
                         <div class="col-md-6">
                             <textarea class="form-control" id="invoice_paid" name="invoice_paid"
-                                placeholder="Hello [[name]], your internet package [[package]] has been expired"
+                                placeholder="{Lang::T('Hello')} [[name]], {Lang::T('your internet package')} [[package]] {Lang::T('has been expired')}"
                                 rows="20">{Lang::htmlspecialchars($_json['invoice_paid'])}</textarea>
                         </div>
                         <p class="col-md-4 help-block">
@@ -112,7 +112,7 @@
                         <label class="col-md-2 control-label">{Lang::T('Balance Notification Payment')}</label>
                         <div class="col-md-6">
                             <textarea class="form-control" id="invoice_balance" name="invoice_balance"
-                                placeholder="Hello [[name]], your internet package [[package]] has been expired"
+                                placeholder="{Lang::T('Hello')} [[name]], {Lang::T('your internet package')} [[package]] {Lang::T('has been expired')}"
                                 rows="20">{Lang::htmlspecialchars($_json['invoice_balance'])}</textarea>
                         </div>
                         <p class="col-md-4 help-block">
@@ -133,6 +133,22 @@
                             <b>[[balance_before]]</b> - {Lang::T('Balance Before')}.<br>
                             <b>[[balance]]</b> - {Lang::T('Balance After')}.<br>
                             <b>[[footer]]</b> - {Lang::T('Invoice Footer')}.
+                        </p>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">{Lang::T('Welcome Message')}</label>
+                        <div class="col-md-6">
+                            <textarea class="form-control" id="welcome_message" name="welcome_message"
+                                rows="4">{Lang::htmlspecialchars($_json['welcome_message'])}</textarea>
+                        </div>
+                        <p class="help-block col-md-4">
+                            <b>[[name]]</b> - {Lang::T('will be replaced with Customer Name')}.<br>
+                            <b>[[username]]</b> - {Lang::T('will be replaced with Customer username')}.<br>
+                            <b>[[password]]</b> - {Lang::T('will be replaced with Customer password')}.<br>
+                            <b>[[url]]</b> - {Lang::T('will be replaced with Customer Portal URL')}.<br>
+                            <b>[[company]]</b> - {Lang::T('will be replaced with Company Name')}.<br>
                         </p>
                     </div>
                 </div>

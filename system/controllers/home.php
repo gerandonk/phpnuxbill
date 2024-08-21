@@ -71,8 +71,8 @@ if (_post('send') == 'balance') {
             $d->pg_url_payment = 'balance';
             $d->status = 2;
             $d->save();
-            Message::sendBalanceNotification($user['phonenumber'], $target['fullname'] . ' (' . $target['username'] . ')', $balance, ($user['balance'] - $balance), Lang::getNotifText('balance_send'), $config['user_notification_payment']);
-            Message::sendBalanceNotification($target['phonenumber'], $user['fullname'] . ' (' . $user['username'] . ')', $balance, ($target['balance'] + $balance), Lang::getNotifText('balance_received'), $config['user_notification_payment']);
+            Message::sendBalanceNotification($user, $balance, ($user['balance'] - $balance), Lang::getNotifText('balance_send'), $config['user_notification_payment']);
+            Message::sendBalanceNotification($target, $balance, ($target['balance'] + $balance), Lang::getNotifText('balance_received'), $config['user_notification_payment']);
             Message::sendTelegram("#u$user[username] send balance to #u$target[username] \n" . Lang::moneyFormat($balance));
             r2(U . 'home', 's', Lang::T('Sending balance success'));
         }
@@ -94,8 +94,37 @@ if (_post('send') == 'balance') {
     }
     r2(U . 'home', 'w', Lang::T('Your friend do not have active package'));
 }
+$_bill = User::_billing();
+$ui->assign('_bills', $_bill);
 
-$ui->assign('_bills', User::_billing());
+// Sync plan to router
+if (isset($_GET['sync']) && !empty($_GET['sync'])) {
+    foreach ($_bill as $tur) {
+        if($tur['status'] == 'on'){
+            $p = ORM::for_table('tbl_plans')->findOne($tur['plan_id']);
+            if ($p) {
+                $c = ORM::for_table('tbl_customers')->findOne($tur['customer_id']);
+                if ($c) {
+                    $dvc = Package::getDevice($p);
+                    if ($_app_stage != 'demo') {
+                        if (file_exists($dvc)) {
+                            require_once $dvc;
+                            (new $p['device'])->add_customer($c, $p);
+                        } else {
+                            new Exception(Lang::T("Devices Not Found"));
+                        }
+                    }
+                    $log .= "DONE : $ptur[namebp], $tur[type], $tur[routers]<br>";
+                } else {
+                    $log .= "Customer NOT FOUND : $tur[namebp], $tur[type], $tur[routers]<br>";
+                }
+            } else {
+                $log .= "PLAN NOT FOUND : $tur[namebp], $tur[type], $tur[routers]<br>";
+            }
+        }
+    }
+    r2(U . 'home', 's', $log);
+}
 
 if (isset($_GET['recharge']) && !empty($_GET['recharge'])) {
     if ($user['status'] != 'Active') {
@@ -154,26 +183,17 @@ if (isset($_GET['recharge']) && !empty($_GET['recharge'])) {
             }
         }
         if ($tur['status'] != 'on') {
-            if ($tur['routers'] != 'radius') {
-                $mikrotik = Mikrotik::info($tur['routers']);
-                $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
-                $router = $tur['routers'];
-            }
             $p = ORM::for_table('tbl_plans')->findOne($tur['plan_id']);
-            if (!$p) {
-                r2(U . 'home', '3', "Plan Not Found");
-            }
-            if ($tur['routers'] == 'radius') {
-                Radius::customerAddPlan($user, $p, $tur['expiration'] . ' ' . $tur['time']);
-            } else {
-                if ($tur['type'] == 'Hotspot') {
-                    Mikrotik::removeHotspotUser($client, $user['username']);
-                    Mikrotik::addHotspotUser($client, $p, $user);
-                } else if ($tur['type'] == 'PPPOE') {
-                    Mikrotik::removePpoeUser($client, $user['username']);
-                    Mikrotik::addPpoeUser($client, $p, $user);
+            $dvc = Package::getDevice($p);
+            if ($_app_stage != 'demo') {
+                if (file_exists($dvc)) {
+                    require_once $dvc;
+                    (new $p['device'])->add_customer($user, $p);
+                } else {
+                    new Exception(Lang::T("Devices Not Found"));
                 }
             }
+
             // make customer cannot extend again
             $days = $config['extend_days'];
             $expiration = date('Y-m-d', strtotime(" +$days day"));
@@ -198,21 +218,13 @@ if (isset($_GET['recharge']) && !empty($_GET['recharge'])) {
     $bill = ORM::for_table('tbl_user_recharges')->where('id', $_GET['deactivate'])->where('username', $user['username'])->findOne();
     if ($bill) {
         $p = ORM::for_table('tbl_plans')->where('id', $bill['plan_id'])->find_one();
-        if ($p['is_radius']) {
-            Radius::customerDeactivate($user['username']);
-        } else {
-            try {
-                $mikrotik = Mikrotik::info($bill['routers']);
-                $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
-                if ($bill['type'] == 'Hotspot') {
-                    Mikrotik::removeHotspotUser($client, $bill['username']);
-                    Mikrotik::removeHotspotActiveUser($client, $bill['username']);
-                } else if ($bill['type'] == 'PPPOE') {
-                    Mikrotik::removePpoeUser($client, $bill['username']);
-                    Mikrotik::removePpoeActive($client, $bill['username']);
-                }
-            } catch (Exception $e) {
-                //ignore it maybe mikrotik has been deleted
+        $dvc = Package::getDevice($p);
+        if ($_app_stage != 'demo') {
+            if (file_exists($dvc)) {
+                require_once $dvc;
+                (new $p['device'])->remove_customer($user, $p);
+            } else {
+                new Exception(Lang::T("Devices Not Found"));
             }
         }
         $bill->status = 'off';
@@ -227,26 +239,90 @@ if (isset($_GET['recharge']) && !empty($_GET['recharge'])) {
     }
 }
 
-if (!empty($_SESSION['nux-mac']) && !empty($_SESSION['nux-ip'])) {
+if (!empty($_SESSION['nux-mac']) && !empty($_SESSION['nux-ip'] && $_c['hs_auth_method'] != 'hchap')) {
     $ui->assign('nux_mac', $_SESSION['nux-mac']);
     $ui->assign('nux_ip', $_SESSION['nux-ip']);
     $bill = ORM::for_table('tbl_user_recharges')->where('id', $_GET['id'])->where('username', $user['username'])->findOne();
-    if ($_GET['mikrotik'] == 'login') {
-        $m = Mikrotik::info($bill['routers']);
-        $c = Mikrotik::getClient($m['ip_address'], $m['username'], $m['password']);
-        Mikrotik::logMeIn($c, $user['username'], $user['password'], $_SESSION['nux-ip'], $_SESSION['nux-mac']);
-        r2(U . 'home', 's', Lang::T('Login Request successfully'));
-    } else if ($_GET['mikrotik'] == 'logout') {
-        $m = Mikrotik::info($bill['routers']);
-        $c = Mikrotik::getClient($m['ip_address'], $m['username'], $m['password']);
-        Mikrotik::logMeOut($c, $user['username']);
-        r2(U . 'home', 's', Lang::T('Logout Request successfully'));
+    $p = ORM::for_table('tbl_plans')->where('id', $bill['plan_id'])->find_one();
+    $dvc = Package::getDevice($p);
+    if ($_app_stage != 'demo') {
+        if (file_exists($dvc)) {
+            require_once $dvc;
+            if ($_GET['mikrotik'] == 'login') {
+                (new $p['device'])->connect_customer($user, $_SESSION['nux-ip'], $_SESSION['nux-mac'], $bill['routers']);
+                r2(U . 'home', 's', Lang::T('Login Request successfully'));
+            } else if ($_GET['mikrotik'] == 'logout') {
+                (new $p['device'])->disconnect_customer($user, $bill['routers']);
+                r2(U . 'home', 's', Lang::T('Logout Request successfully'));
+            }
+        } else {
+            new Exception(Lang::T("Devices Not Found"));
+        }
     }
 }
+
+if (!empty($_SESSION['nux-mac']) && !empty($_SESSION['nux-ip'] && !empty($_SESSION['nux-hostname']) && $_c['hs_auth_method'] == 'hchap')) {
+    $apkurl = (((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'onoff')|| $_SERVER['SERVER_PORT'] == 443)?'https':'http').'://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    $ui->assign('nux_mac', $_SESSION['nux-mac']);
+    $ui->assign('nux_ip', $_SESSION['nux-ip']);
+    $keys = explode('-', $_SESSION['nux-key']);
+    $ui->assign('hostname', $_SESSION['nux-hostname']);
+    $ui->assign('apkurl', $apkurl);
+    $ui->assign('key1', $keys[0]);
+    $ui->assign('key2', $keys[1]);
+    $ui->assign('hchap', $_GET['hchap']);
+    $ui->assign('logged', $_GET['logged']);
+    if ($_app_stage != 'demo') {
+            if ($_GET['mikrotik'] == 'login') {
+                r2(U . 'home&hchap=true', 's', Lang::T('Login Request successfully'));
+                }
+                $getmsg = $_GET['msg'];
+                ///get auth notification from mikrotik
+                if($getmsg == 'Connected') {
+                    $msg .= Lang::T($getmsg);
+                    r2(U . 'home&logged=1', 's', $msg);
+                } else if($getmsg){
+                    $msg .= Lang::T($getmsg);
+                    r2(U . 'home', 's', $msg);
+            }
+        }
+    }
+
+if (!empty($_SESSION['nux-mac']) && !empty($_SESSION['nux-ip'] && !empty($_SESSION['nux-hostname']) && $_c['hs_auth_method'] == 'hchap')) {
+    $apkurl = (((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'onoff')|| $_SERVER['SERVER_PORT'] == 443)?'https':'http').'://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    $ui->assign('nux_mac', $_SESSION['nux-mac']);
+    $ui->assign('nux_ip', $_SESSION['nux-ip']);
+    $keys = explode('-', $_SESSION['nux-key']);
+    $ui->assign('hostname', $_SESSION['nux-hostname']);
+    $ui->assign('apkurl', $apkurl);
+    $ui->assign('key1', $keys[0]);
+    $ui->assign('key2', $keys[1]);
+    $ui->assign('hchap', $_GET['hchap']);
+    $ui->assign('logged', $_GET['logged']);
+    if ($_app_stage != 'demo') {
+            if ($_GET['mikrotik'] == 'login') {
+                r2(U . 'home&hchap=true', 's', Lang::T('Login Request successfully'));
+                }
+                $getmsg = $_GET['msg'];
+                ///get auth notification from mikrotik
+                if($getmsg == 'Connected') {
+                    $msg .= Lang::T($getmsg);
+                    r2(U . 'home&logged=1', 's', $msg);
+                } else if($getmsg){
+                    $msg .= Lang::T($getmsg);
+                    r2(U . 'home', 's', $msg);
+            }
+        }
+    }
 
 $ui->assign('unpaid', ORM::for_table('tbl_payment_gateway')
     ->where('username', $user['username'])
     ->where('status', 1)
     ->find_one());
+$ui->assign('code', alphanumeric(_get('code'), "-"));
+
+$abills = User::getAttributes("Bill");
+$ui->assign('abills', $abills);
+
 run_hook('view_customer_dashboard'); #HOOK
-$ui->display('user-dashboard.tpl');
+$ui->display('user-ui/dashboard.tpl');

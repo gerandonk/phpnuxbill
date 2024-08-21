@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="ui/ui/styles/select2-bootstrap.min.css" />
     <link rel="stylesheet" href="ui/ui/styles/sweetalert2.min.css" />
     <link rel="stylesheet" href="ui/ui/styles/plugins/pace.css" />
+    <link rel="stylesheet" href="ui/ui/summernote/summernote.min.css" />
     <script src="ui/ui/scripts/sweetalert2.all.min.js"></script>
     <style>
         ::-moz-selection {
@@ -139,6 +140,111 @@
                 font-size: 10px;
                 display: inline-block;
             }
+        }
+
+        .bs-callout {
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #eee;
+            border-left-width: 5px;
+            border-radius: 3px;
+        }
+
+        .bs-callout h4 {
+            margin-top: 0;
+            margin-bottom: 5px
+        }
+
+        .bs-callout p:last-child {
+            margin-bottom: 0
+        }
+
+        .bs-callout code {
+            border-radius: 3px
+        }
+
+        .bs-callout+.bs-callout {
+            margin-top: -5px
+        }
+
+        .bs-callout-danger {
+            border-left-color: #ce4844
+        }
+
+        .bs-callout-danger h4 {
+            color: #ce4844
+        }
+
+        .bs-callout-warning {
+            border-left-color: #aa6708
+        }
+
+        .bs-callout-warning h4 {
+            color: #aa6708
+        }
+
+        .bs-callout-info {
+            border-left-color: #1b809e
+        }
+
+        .bs-callout-info h4 {
+            color: #1b809e
+        }
+
+        /* Checkbox container */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        /* Hidden checkbox */
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* Slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #2196F3;
+        }
+
+        input:focus+.slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked+.slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
         }
     </style>
     {if isset($xheader)}
@@ -280,17 +386,17 @@
                     {/if}
                     {$_MENU_AFTER_PLANS}
                     <li class="{if $_system_menu eq 'reports'}active{/if} treeview">
-                        <a href="#">
-                            <i class="ion ion-clipboard"></i> <span>{Lang::T('Reports')}</span>
-                            <span class="pull-right-container">
-                                <i class="fa fa-angle-left pull-right"></i>
-                            </span>
-                        </a>
+                        {if in_array($_admin['user_type'],['SuperAdmin','Admin', 'Report'])}
+                            <a href="#">
+                                <i class="ion ion-clipboard"></i> <span>{Lang::T('Reports')}</span>
+                                <span class="pull-right-container">
+                                    <i class="fa fa-angle-left pull-right"></i>
+                                </span>
+                            </a>
+                        {/if}
                         <ul class="treeview-menu">
-                            <li {if $_routes[1] eq 'daily-report' }class="active" {/if}><a
-                                    href="{$_url}reports/daily-report">{Lang::T('Daily Reports')}</a></li>
-                            <li {if $_routes[1] eq 'by-period' }class="active" {/if}><a
-                                    href="{$_url}reports/by-period">{Lang::T('Period Reports')}</a></li>
+                            <li {if $_system_menu eq 'reports' }class="active" {/if}><a
+                                    href="{$_url}reports">{Lang::T('Daily Reports')}</a></li>
                             <li {if $_routes[1] eq 'activation' }class="active" {/if}><a
                                     href="{$_url}reports/activation">{Lang::T('Activation History')}</a></li>
                             {$_MENU_REPORTS}
@@ -322,10 +428,12 @@
                                 </span>
                             </a>
                             <ul class="treeview-menu">
-                                <li {if $_routes[0] eq 'routers' and $_routes[1] eq 'list' }class="active" {/if}><a
-                                        href="{$_url}routers/list">{Lang::T('Routers')}</a></li>
+                                <li {if $_routes[0] eq 'routers' and $_routes[1] eq '' }class="active" {/if}><a
+                                        href="{$_url}routers">{Lang::T('Routers')}</a></li>
                                 <li {if $_routes[0] eq 'pool' and $_routes[1] eq 'list' }class="active" {/if}><a
                                         href="{$_url}pool/list">{Lang::T('IP Pool')}</a></li>
+                                <li {if $_routes[0] eq 'routers' and $_routes[1] eq 'maps' }class="active" {/if}><a
+                                        href="{$_url}routers/maps">{Lang::T('Routers Maps')}</a></li>
                                 {$_MENU_NETWORK}
                             </ul>
                         </li>
@@ -365,6 +473,8 @@
                                 </li>
                                 <li {if $_routes[1] eq 'Registration_Info' }class="active" {/if}><a
                                         href="{$_url}pages/Registration_Info">{Lang::T('Registration Info')}</a></li>
+                                <li {if $_routes[1] eq 'Payment_Info' }class="active" {/if}><a
+                                        href="{$_url}pages/Payment_Info">{Lang::T('Payment Info')}</a></li>
                                 <li {if $_routes[1] eq 'Privacy_Policy' }class="active" {/if}><a
                                         href="{$_url}pages/Privacy_Policy">{Lang::T('Privacy Policy')}</a></li>
                                 <li {if $_routes[1] eq 'Terms_and_Conditions' }class="active" {/if}><a
@@ -392,6 +502,8 @@
                                         href="{$_url}settings/maintenance">{Lang::T('Maintenance Mode')}</a></li>
                                 <li {if $_routes[1] eq 'notifications' }class="active" {/if}><a
                                         href="{$_url}settings/notifications">{Lang::T('User Notification')}</a></li>
+                                <li {if $_routes[1] eq 'devices' }class="active" {/if}><a
+                                        href="{$_url}settings/devices">{Lang::T('Devices')}</a></li>
                             {/if}
                             {if in_array($_admin['user_type'],['SuperAdmin','Admin','Agent'])}
                                 <li {if $_routes[1] eq 'users' }class="active" {/if}><a
@@ -408,12 +520,8 @@
                                 {$_MENU_SETTINGS}
                                 <li {if $_routes[0] eq 'pluginmanager' }class="active" {/if}>
                                     <a href="{$_url}pluginmanager"><i class="glyphicon glyphicon-tasks"></i>
-                                        {Lang::T('Plugin Manager')} <small class="label pull-right">Free</small></a>
+                                        {Lang::T('Plugin Manager')}</a>
                                 </li>
-                                {* <li {if $_routes[0] eq 'codecanyon' }class="active" {/if}>
-                                <a href="{$_url}codecanyon"><i class="glyphicon glyphicon-shopping-cart"></i>
-                                    Codecanyon.net <small class="label pull-right">Paid</small></a>
-                            </li> *}
                             {/if}
                         </ul>
                     </li>
@@ -434,17 +542,29 @@
                                             href="{$_url}logs/radius">Radius</a>
                                     </li>
                                 {/if}
+                                {$_MENU_LOGS}
                             </ul>
-                            {$_MENU_LOGS}
                         </li>
                     {/if}
                     {$_MENU_AFTER_LOGS}
-                    <li {if $_system_menu eq 'community' }class="active" {/if}>
-                        <a href="{$_url}community">
-                            <i class="ion ion-chatboxes"></i>
-                            <span class="text">{Lang::T('Community')}</span>
-                        </a>
-                    </li>
+                    {if in_array($_admin['user_type'],['SuperAdmin','Admin'])}
+                        <li {if $_system_menu eq 'community' }class="active" {/if}>
+                            <a href="{if $_c['docs_clicked'] != 'yes'}{$_url}settings/docs{else}./docs/{/if}">
+                                <i class="ion ion-ios-bookmarks"></i>
+                                <span class="text">{Lang::T('Documentation')}</span>
+                                {if $_c['docs_clicked'] != 'yes'}
+                                    <span class="pull-right-container"><small
+                                            class="label pull-right bg-green">New</small></span>
+                                {/if}
+                            </a>
+                        </li>
+                        <li {if $_system_menu eq 'community' }class="active" {/if}>
+                            <a href="{$_url}community">
+                                <i class="ion ion-chatboxes"></i>
+                                <span class="text">{Lang::T('Community')}</span>
+                            </a>
+                        </li>
+                    {/if}
                     {$_MENU_AFTER_COMMUNITY}
                 </ul>
             </section>

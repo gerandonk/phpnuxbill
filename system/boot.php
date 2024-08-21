@@ -8,41 +8,9 @@
 try {
     require_once 'init.php';
 } catch (Throwable $e) {
-    $ui = new Smarty();
-    $ui->setTemplateDir([
-        'custom' => File::pathFixer($UI_PATH . '/ui_custom/'),
-        'default' => File::pathFixer($UI_PATH . '/ui/')
-    ]);
-    $ui->assign('_url', APP_URL . '/index.php?_route=');
-    $ui->setCompileDir(File::pathFixer($UI_PATH . '/compiled/'));
-    $ui->setConfigDir(File::pathFixer($UI_PATH . '/conf/'));
-    $ui->setCacheDir(File::pathFixer($UI_PATH . '/cache/'));
-    $ui->assign("error_title", "PHPNuxBill Crash");
-    if (_auth()) {
-        $ui->assign("error_message", $e->getMessage() . '<br>');
-    } else {
-        $ui->assign("error_message", $e->getMessage() . '<br><pre>' . $e->getTraceAsString() . '</pre>');
-    }
-    $ui->display('router-error.tpl');
-    die();
+    die($e->getMessage() . '<br><pre>' . $e->getTraceAsString() . '</pre>');
 } catch (Exception $e) {
-    $ui = new Smarty();
-    $ui->setTemplateDir([
-        'custom' => File::pathFixer($UI_PATH . '/ui_custom/'),
-        'default' => File::pathFixer($UI_PATH . '/ui/')
-    ]);
-    $ui->assign('_url', APP_URL . '/index.php?_route=');
-    $ui->setCompileDir(File::pathFixer($UI_PATH . '/compiled/'));
-    $ui->setConfigDir(File::pathFixer($UI_PATH . '/conf/'));
-    $ui->setCacheDir(File::pathFixer($UI_PATH . '/cache/'));
-    $ui->assign("error_title", "PHPNuxBill Crash");
-    if (_auth()) {
-        $ui->assign("error_message", $e->getMessage() . '<br>');
-    } else {
-        $ui->assign("error_message", $e->getMessage() . '<br><pre>' . $e->getTraceAsString() . '</pre>');
-    }
-    $ui->display('router-error.tpl');
-    die();
+    die($e->getMessage() . '<br><pre>' . $e->getTraceAsString() . '</pre>');
 }
 
 function _notify($msg, $type = 'e')
@@ -75,9 +43,10 @@ $ui->setConfigDir(File::pathFixer($UI_PATH . '/conf/'));
 $ui->setCacheDir(File::pathFixer($UI_PATH . '/cache/'));
 $ui->assign('app_url', APP_URL);
 $ui->assign('_domain', str_replace('www.', '', parse_url(APP_URL, PHP_URL_HOST)));
-$ui->assign('_url', APP_URL . '/index.php?_route=');
+$ui->assign('_url', APP_URL . '/?_route=');
 $ui->assign('_path', __DIR__);
 $ui->assign('_c', $config);
+$ui->assign('user_language', $_SESSION['user_language']);
 $ui->assign('UPLOAD_PATH', str_replace($root_path, '',  $UPLOAD_PATH));
 $ui->assign('CACHE_PATH', str_replace($root_path, '',  $CACHE_PATH));
 $ui->assign('PAGES_PATH', str_replace($root_path, '',  $PAGES_PATH));
@@ -98,8 +67,12 @@ if (isset($_SESSION['notify'])) {
     unset($_SESSION['ntype']);
 }
 
-// Routing Engine
-$req = _get('_route');
+if(!isset($_GET['_route'])) {
+    $req = ltrim(parse_url($_SERVER['REQUEST_URI'])['path'], '/');
+}else{
+    // Routing Engine
+    $req = _get('_route');
+}
 $routes = explode('/', $req);
 $ui->assign('_routes', $routes);
 $handler = $routes[0];
@@ -150,6 +123,11 @@ try {
         r2(U . 'dashboard', 'e', 'not found');
     }
 } catch (Throwable $e) {
+    Message::sendTelegram(
+        "Sistem Error.\n" .
+            $e->getMessage() . "\n" .
+            $e->getTraceAsString()
+    );
     if (!Admin::getID()) {
         r2(U . 'home', 'e', $e->getMessage());
     }
@@ -158,6 +136,11 @@ try {
     $ui->display('router-error.tpl');
     die();
 } catch (Exception $e) {
+    Message::sendTelegram(
+        "Sistem Error.\n" .
+            $e->getMessage() . "\n" .
+            $e->getTraceAsString()
+    );
     if (!Admin::getID()) {
         r2(U . 'home', 'e', $e->getMessage());
     }

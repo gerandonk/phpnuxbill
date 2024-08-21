@@ -1,65 +1,65 @@
 {include file="sections/header.tpl"}
 
-
 <div class="row">
-    <div class="col-lg-3 col-xs-6">
-        <div class="small-box bg-aqua">
-            <div class="inner">
-                <h4><sup>{$_c['currency_code']}</sup>
-                    {number_format($iday,0,$_c['dec_point'],$_c['thousands_sep'])}</h4>
-                <p>{Lang::T('Income Today')}</p>
+    {if in_array($_admin['user_type'],['SuperAdmin','Admin', 'Report'])}
+        <div class="col-lg-3 col-xs-6">
+            <div class="small-box bg-aqua">
+                <div class="inner">
+                    <h4 class="text-bold" style="font-size: large;"><sup>{$_c['currency_code']}</sup>
+                        {number_format($iday,0,$_c['dec_point'],$_c['thousands_sep'])}</h4>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-clock"></i>
+                </div>
+                <a href="{$_url}reports/by-date" class="small-box-footer">{Lang::T('Income Today')}</a>
             </div>
-            <div class="icon">
-                <i class="ion ion-bag"></i>
-            </div>
-            <a href="{$_url}reports/by-date" class="small-box-footer">{Lang::T('View Reports')} <i
-                    class="fa fa-arrow-circle-right"></i></a>
         </div>
-    </div>
-    <div class="col-lg-3 col-xs-6">
-        <div class="small-box bg-green">
-            <div class="inner">
-                <h4><sup>{$_c['currency_code']}</sup>
-                    {number_format($imonth,0,$_c['dec_point'],$_c['thousands_sep'])}</h4>
-
-                <p>{Lang::T('Income This Month')}</p>
+        <div class="col-lg-3 col-xs-6">
+            <div class="small-box bg-green">
+                <div class="inner">
+                    <h4 class="text-bold" style="font-size: large;"><sup>{$_c['currency_code']}</sup>
+                        {number_format($imonth,0,$_c['dec_point'],$_c['thousands_sep'])}</h4>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-android-calendar"></i>
+                </div>
+                <a href="{$_url}reports/by-period" class="small-box-footer">{Lang::T('Income This Month')}</a>
             </div>
-            <div class="icon">
-                <i class="ion ion-stats-bars"></i>
-            </div>
-            <a href="{$_url}reports/by-period" class="small-box-footer">{Lang::T('View Reports')} <i
-                    class="fa fa-arrow-circle-right"></i></a>
         </div>
-    </div>
+    {/if}
     <div class="col-lg-3 col-xs-6">
         <div class="small-box bg-yellow">
             <div class="inner">
-                <h4>{$u_act}/{$u_all}</h4>
-
-                <p>{Lang::T('Users Active')}</p>
+                <h4 class="text-bold" style="font-size: large;">{$u_act}/{$u_all-$u_act}</h4>
             </div>
             <div class="icon">
                 <i class="ion ion-person"></i>
             </div>
-            <a href="{$_url}plan/list" class="small-box-footer">{Lang::T('View All')} <i
-                    class="fa fa-arrow-circle-right"></i></a>
+            <a href="{$_url}plan/list" class="small-box-footer">{Lang::T('Active')}/{Lang::T('Expired')}</a>
         </div>
     </div>
     <div class="col-lg-3 col-xs-6">
         <div class="small-box bg-red">
             <div class="inner">
-                <h4>{$c_all}</h4>
-
-                <p>{Lang::T('Total Users')}</p>
+                <h4 class="text-bold" style="font-size: large;">{$c_all}</h4>
             </div>
             <div class="icon">
-                <i class="fa fa-users"></i>
+                <i class="ion ion-android-people"></i>
             </div>
-            <a href="{$_url}customers/list" class="small-box-footer">{Lang::T('View All')} <i
-                    class="fa fa-arrow-circle-right"></i></a>
+            <a href="{$_url}customers/list" class="small-box-footer">{Lang::T('Customers')}</a>
         </div>
     </div>
 </div>
+<ol class="breadcrumb">
+    <li>{Lang::dateFormat($start_date)}</li>
+    <li>{Lang::dateFormat($current_date)}</li>
+    {if $_c['enable_balance'] == 'yes' && in_array($_admin['user_type'],['SuperAdmin','Admin', 'Report'])}
+        <li>
+            {Lang::T('Customer Balance')} <sup>{$_c['currency_code']}</sup>
+            <b>{number_format($cb,0,$_c['dec_point'],$_c['thousands_sep'])}</b>
+        </li>
+    {/if}
+</ol>
 <div class="row">
     <div class="col-md-7">
 
@@ -156,7 +156,8 @@
                                 <tr>
                                     <td><a href="{$_url}customers/viewu/{$expired['username']}">{$expired['username']}</a></td>
                                     <td><small data-toggle="tooltip" data-placement="top"
-                                    title="{Lang::dateAndTimeFormat($expired['recharged_on'],$expired['recharged_time'])}">{Lang::timeElapsed($rem_started)}</small> /
+                                            title="{Lang::dateAndTimeFormat($expired['recharged_on'],$expired['recharged_time'])}">{Lang::timeElapsed($rem_started)}</small>
+                                        /
                                         <span data-toggle="tooltip" data-placement="top"
                                             title="{Lang::dateAndTimeFormat($expired['expiration'],$expired['time'])}">{Lang::timeElapsed($rem_exp)}</span>
                                     </td>
@@ -176,7 +177,8 @@
     <div class="col-md-5">
         {if $_c['hide_pg'] != 'yes'}
             <div class="panel panel-success panel-hovered mb20 activities">
-                <div class="panel-heading">{Lang::T('Payment Gateway')}: {$_c['payment_gateway']}</div>
+                <div class="panel-heading">{Lang::T('Payment Gateway')}: {str_replace(',',', ',$_c['payment_gateway'])}
+                </div>
             </div>
         {/if}
         {if $_c['hide_aui'] != 'yes'}
@@ -335,6 +337,9 @@
                 //lets calculate the inactive users as reported
                 var expired = u_all - u_act;
                 var inactive = c_all - u_all;
+                if(inactive < 0){
+                    inactive = 0;
+                }
                 // Create the chart data
                 var data = {
                     labels: ['Active Users', 'Expired Users', 'Inactive Users'],
@@ -372,39 +377,45 @@
         {/literal}
     {/if}
 </script>
-<script>
-    window.addEventListener('DOMContentLoaded', function() {
-        $.getJSON("./version.json?" + Math.random(), function(data) {
-            var localVersion = data.version;
-            $('#version').html('Version: ' + localVersion);
-            $.getJSON(
-                "https://raw.githubusercontent.com/hotspotbilling/phpnuxbill/master/version.json?" +
-                Math
-                .random(),
-                function(data) {
-                    var latestVersion = data.version;
-                    if (localVersion !== latestVersion) {
-                        $('#version').html('Latest Version: ' + latestVersion);
-                        Swal.fire({
-                            icon: 'info',
-                            title: "New Version Available\nVersion: "+latestVersion,
-                            toast: true,
-                            position: 'bottom-right',
-                            showConfirmButton: true,
-                            showCloseButton: true,
-                            timer: 30000,
-                            confirmButtonText: '<a href="{$_url}community#latestVersion" style="color: white;">Update Now</a>',
-                            timerProgressBar: true,
-                            didOpen: (toast) => {
-                                toast.addEventListener('mouseenter', Swal.stopTimer)
-                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+{if $_c['new_version_notify'] != 'disable'}
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            $.getJSON("./version.json?" + Math.random(), function(data) {
+                var localVersion = data.version;
+                $('#version').html('Version: ' + localVersion);
+                $.getJSON(
+                    "https://raw.githubusercontent.com/hotspotbilling/phpnuxbill/master/version.json?" +
+                    Math
+                    .random(),
+                    function(data) {
+                        var latestVersion = data.version;
+                        if (localVersion !== latestVersion) {
+                            $('#version').html('Latest Version: ' + latestVersion);
+                            if (getCookie(latestVersion) != 'done') {
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: "New Version Available\nVersion: " + latestVersion,
+                                    toast: true,
+                                    position: 'bottom-right',
+                                    showConfirmButton: true,
+                                    showCloseButton: true,
+                                    timer: 30000,
+                                    confirmButtonText: '<a href="{$_url}community#latestVersion" style="color: white;">Update Now</a>',
+                                    timerProgressBar: true,
+                                    didOpen: (toast) => {
+                                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                                        toast.addEventListener('mouseleave', Swal
+                                            .resumeTimer)
+                                    }
+                                });
+                                setCookie(latestVersion, 'done', 7);
                             }
-                        });
-                    }
-                });
-        });
+                        }
+                    });
+            });
 
-    });
-</script>
+        });
+    </script>
+{/if}
 
 {include file="sections/footer.tpl"}

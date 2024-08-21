@@ -10,8 +10,13 @@ class Lang
 {
     public static function T($key)
     {
-        global $_L, $lan_file, $config;
-        if(is_array($_SESSION['Lang'])){
+        global $_L, $lan_file, $root_path, $config;
+
+        if (empty($lan_file)) {
+            $lan_file = $root_path . File::pathFixer('system/lan/' . $config['language'] . '.json');
+        }
+
+        if (is_array($_SESSION['Lang'])) {
             $_L = array_merge($_L, $_SESSION['Lang']);
         }
         $key = preg_replace('/\s+/', ' ', $key);
@@ -101,10 +106,9 @@ class Lang
 
     public static function timeElapsed($datetime, $full = false)
     {
-        $now = new DateTime;
+        $now = new DateTime(date("Y-m-d H:i:s"));
         $ago = new DateTime($datetime);
         $diff = $now->diff($ago);
-
         $diff->w = floor($diff->d / 7);
         $diff->d -= $diff->w * 7;
 
@@ -119,15 +123,28 @@ class Lang
         );
         foreach ($string as $k => &$v) {
             if ($diff->$k) {
-                $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+                $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? '' : '');
             } else {
                 unset($string[$k]);
             }
         }
-
+        $when = "";
+        if (time() > strtotime($datetime)) {
+            $when = Lang::T('ago');
+        } else {
+            $when = '';
+        }
         if (!$full)
             $string = array_slice($string, 0, 1);
-            return $string ? implode(', ', $string) .' '. Lang::T('ago') : Lang::T('just now');
+        if ($string) {
+            if (empty($when)) {
+                return '<b>' . implode(', ', $string) . '</b>';
+            } else {
+                return implode(', ', $string) . ' ' . $when;
+            }
+        } else {
+            return Lang::T('just now');
+        }
     }
 
     public static function nl2br($text)
@@ -233,16 +250,18 @@ class Lang
         return $txt;
     }
 
-    public static function maskText($text){
+    public static function maskText($text)
+    {
         $len = strlen($text);
-        if($len < 3){
+        if ($len < 3) {
             return "***";
-        }else if($len<5){
-            return substr($text,0,1)."***".substr($text,-1,1);
-        }else if($len<8){
-            return substr($text,0,2)."***".substr($text,-2,2);
-        }else{
-            return substr($text,0,4)."******".substr($text,-3,3);
+        } else if ($len < 5) {
+            return substr($text, 0, 1) . "***" . substr($text, -1, 1);
+        } else if ($len < 8) {
+            return substr($text, 0, 2) . "***" . substr($text, -2, 2);
+        } else {
+            return substr($text, 0, 4) . "******" . substr($text, -3, 3);
         }
     }
+
 }

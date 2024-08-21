@@ -2,6 +2,76 @@
 
 # CHANGELOG
 
+## 2024.8.19
+
+- New Page, Payment Info, To Inform Customer, which payment gateway is good
+- Move Customer UI to user-ui folder
+- Voucher Template
+- Change editor to summernote
+- Customer can change language
+
+## 2024.8.6
+
+- Fix QRCode Scanner
+- Simplify Chap verification password
+- Quota based Freeradius Rest
+- Fix Payment Gateway Audit
+
+## 2024.8.6
+
+- Fix Customer pppoe username
+
+## 2024.8.5
+
+- Add Customer Mail Inbox
+- Add pppoe customer and pppoe IP to make static username and IP
+- Add Sync button
+- Allow Mac Address Username
+- Router Maps
+
+## 2024.8.1
+
+- Show Bandwidth Plan in the customer dashboard
+- Add Audit Payment Gateway
+- Fix Plugin Manager
+
+## 2024.7.23
+
+- add Voucher Used Date
+- Reports page just 1 for all
+- fix start date at dashboard
+- fix installation parameter
+
+## 2024.7.23
+
+- Add Additional Bill Info to Customer
+- Add Voucher only Login, without username
+- Add Additional Bill info to Mikrotik Comment
+- Add dynamic Application URL For Installation
+- Fix Active Customers for Voucher
+
+## 2024.7.15
+
+- Radius Rest API
+- Getting Started Documentation
+- Only Show new update just once
+
+## 2024.6.21
+
+- Add filter result in voucher and internet plan
+- Add input script on-login and on-logout
+- Add local ip for pppoe
+
+## 2024.6.19
+
+- new system for device, it can support non mikrotik devices, as long someone create device file
+- add local ip in the pool
+- Custom Fix Expired Date for postpaid
+- Expired customer can move to another Internet Plan
+- Plugin installer
+- refresh plugin manager cache
+- Docker File by George Njeri (@Swagfin)
+
 ## 2024.5.21
 
 - Add Maintenance Mode by @freeispradius
