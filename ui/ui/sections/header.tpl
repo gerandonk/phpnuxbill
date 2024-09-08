@@ -19,6 +19,294 @@
     <link rel="stylesheet" href="ui/ui/summernote/summernote.min.css" />
     <script src="ui/ui/scripts/sweetalert2.all.min.js"></script>
     <style>
+        /* New Customize Interface Start Here */
+        @import url(https://fonts.googleapis.com/css?family=Open+Sans);
+
+        body {
+            position: relative;
+            z-index: 1;
+            background-color: rgb(241 245 249);
+            font-family: Satoshi, sans-serif;
+            font-size: 1rem;
+            line-height: 1.5rem;
+            font-weight: 400;
+            color: rgb(100 116 139);
+        }
+
+        .modern-skin-dark .main-header .logo {
+            background-color: rgb(28 36 52);
+            color: #fff;
+        }
+
+        .modern-skin-dark .main-header .navbar {
+            background: rgb(28 36 52);
+        }
+
+        .modern-skin-dark .main-sidebar .sidebar {
+            background-color: rgb(28 36 52);
+            bottom: 0;
+        }
+
+        .modern-skin-dark .main-sidebar {
+            background-color: rgb(28 36 52);
+            box-shadow: 0 0 5px rgba(0, 0, 0, .3);
+        }
+
+        .modern-skin-dark .main-header .navbar>a:focus,
+        .modern-skin-dark .main-header .navbar>a:active,
+        .modern-skin-dark .main-header .navbar>a:visited,
+        .modern-skin-dark .main-header .navbar>a:hover {
+            background-color: rgb(28 36 52);
+        }
+
+        .sidebar-menu li>a {
+            position: relative;
+            background-color: rgb(28 36 52);
+        }
+
+        .sidebar-menu li:focus,
+        .sidebar-menu li :hover {
+            color: #10d435;
+
+        }
+
+        .modern-skin-dark .main-sidebar .sidebar .sidebar-menu li.active a {
+            background-color: #2e298e;
+            border-radius: 5px;
+            margin: 10px;
+
+        }
+
+        .modern-skin-dark .main-sidebar .sidebar .sidebar-menu {
+            background-color: rgb(28 36 52);
+        }
+
+        .modern-skin-dark .main-sidebar .sidebar .sidebar-menu li .treeview-menu li.active a {
+            background-color: transparent !important;
+            color: rgb(84, 131, 227);
+        }
+
+        .modern-skin-dark .main-sidebar .sidebar .sidebar-menu li .treeview-menu li>a {
+            background-color: transparent !important;
+            padding: 10px 5px 5px 15px;
+        }
+
+        .modern-skin-dark .main-sidebar .sidebar .sidebar-menu li .treeview-menu {
+            padding-left: 0;
+            border-left: 3px solid #10d435;
+        }
+
+        .content-header {
+            list-style-type: none;
+            padding: 15px;
+            background-color: #f6f9fc;
+
+        }
+
+        @media (max-width: 767px) {
+            .content {
+                padding: 0 15px !important;
+                background-color: #f6f9fc;
+            }
+        }
+
+        .content {
+            padding: 25px !important;
+            background-color: #f6f9fc;
+
+        }
+
+        .content-wrapper,
+        .right-side {
+            min-height: 100%;
+            background-color: #f6f9fc;
+            z-index: 800;
+        }
+
+        .main-footer {
+            background: rgb(28 36 52);
+            padding: 15px;
+            color: rgb(100 116 139);
+            border-top: 1px solid #d2d6de;
+        }
+
+        .panel-primary {
+            border-color: #333;
+        }
+
+        .panel {
+            margin-bottom: 20px;
+            background-color: #fff;
+            border: 2px solid;
+            border-color: rgba(221, 224, 255, .54);
+            border-radius: 25px;
+            -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+            box-shadow: 0px 4px 30px rgba(221, 224, 255, .54);
+        }
+
+        .panel-primary>.panel-heading {
+            color: inherit;
+            background-color: transparent;
+            border-color: transparent;
+        }
+
+        .panel-primary>.panel-heading {
+            color: inherit;
+            background-color: transparent;
+            border-color: transparent;
+        }
+
+        .panel-heading {
+            padding: 10px 15px;
+            border-bottom: 1px solid transparent;
+            border-top-right-radius: 3px;
+            border-top-left-radius: 3px;
+        }
+
+        .content .row [class*=col-] .box {
+            -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+            box-shadow: 0px 4px 30px rgba(221, 224, 255, .54);
+            -moz-box-shadow: 0 1px 1px rgba(0, 0, 0, .1);
+            -ms-box-shadow: 0 1px 1px rgba(0, 0, 0, .1);
+            -webkit-border-radius: 1px !important;
+            -moz-border-radius: 1px !important;
+            -ms-border-radius: 1px !important;
+            border-radius: 25px !important;
+            border-color: rgba(221, 224, 255, .54);
+        }
+
+        .box.box-solid.box-primary>.box-header {
+            color: inherit;
+            background-color: transparent;
+            border-color: transparent;
+        }
+        .box.box-solid.box-info>.box-header {
+            color: inherit;
+            background-color: transparent;
+            border-color: transparent;
+        }
+        .box.box-solid.box-danger>.box-header {
+            color: inherit;
+            background-color: transparent;
+            border-color: transparent;
+        }
+
+        .box.box-solid.box-warning>.box-header {
+            color: inherit;
+            background-color: transparent;
+            border-color: transparent;
+        }
+
+        .box.box-solid.box-default>.box-header {
+            color: inherit;
+            background-color: transparent;
+            border-color: transparent;
+        }
+
+        .box-footer {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 25px;
+            border-bottom-left-radius: 25px;
+            border-top: 1px solid transparent;
+            padding: 10px;
+            background-color: inherit;
+        }
+
+        .panel-footer {
+            padding: 10px 15px;
+            background-color: inherit;
+            border-top: 1px solid transparent;
+            border-bottom-right-radius: 25px;
+            border-bottom-left-radius: 25px;
+        }
+
+        .box {
+            position: relative;
+            border-radius: 25px;
+            background: inherit;
+            border-top: 3px solid #d2d6de;
+            margin-bottom: 20px;
+            width: 100%;
+            -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+            box-shadow: 0px 4px 30px rgba(221, 224, 255, .54);
+        }
+
+
+        /* Search Bar Start Here */
+        .wrap {
+            width: 30%;
+            position: absolute;
+            top: 50%;
+            left: 47%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .search {
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 1px solid #2e298e;
+            background-color: #2e298e;
+            color: white;
+            cursor: pointer;
+            width: 50%;
+            height: 50%;
+        }
+
+        .search-overlay {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .search-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .searchTerm {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00B4CC;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .cancelButton {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Search Bar End Here */
+
+        /* New Customize Interface End Here */
+
         ::-moz-selection {
             /* Code for Firefox */
             color: red;
@@ -89,8 +377,8 @@
         }
 
         /*
-         * maintenance top-bar
-         */
+    * maintenance top-bar
+    */
 
         .notification-top-bar {
             position: fixed;
@@ -266,6 +554,22 @@
                 </a>
                 <div class="navbar-custom-menu">
                     <ul class="nav navbar-nav">
+                        <div class="wrap">
+                            <div class="">
+                                <button id="openSearch" class="search"><i class="fa fa-search x2"></i></button>
+                            </div>
+                        </div>
+
+                        <div id="searchOverlay" class="search-overlay">
+                            <div class="search-container">
+                                <input type="text" id="searchTerm" class="searchTerm"
+                                    placeholder="{Lang::T('Search Users')}" autocomplete="off">
+                                <div id="searchResults" class="search-results">
+                                    <!-- Search results will be displayed here -->
+                                </div>
+                                <button type="button" id="closeSearch" class="cancelButton">{Lang::T('Cancel')}</button>
+                            </div>
+                        </div>
                         <li class="dropdown user user-menu">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                 <img src="https://robohash.org/{$_admin['id']}?set=set3&size=100x100&bgset=bg1"
@@ -375,7 +679,7 @@
                                 <li {if $_routes[1] eq 'pppoe' }class="active" {/if}><a
                                         href="{$_url}services/pppoe">PPPOE</a></li>
                                 <li {if $_routes[1] eq 'list' }class="active" {/if}><a
-                                        href="{$_url}bandwidth/list">{Lang::T('Bandwidth')}</a></li>
+                                        href="{$_url}bandwidth/list">Bandwidth</a></li>
                                 {if $_c['enable_balance'] == 'yes'}
                                     <li {if $_routes[1] eq 'balance' }class="active" {/if}><a
                                             href="{$_url}services/balance">{Lang::T('Customer Balance')}</a></li>
@@ -429,9 +733,9 @@
                             </a>
                             <ul class="treeview-menu">
                                 <li {if $_routes[0] eq 'routers' and $_routes[1] eq '' }class="active" {/if}><a
-                                        href="{$_url}routers">{Lang::T('Routers')}</a></li>
+                                        href="{$_url}routers">Routers</a></li>
                                 <li {if $_routes[0] eq 'pool' and $_routes[1] eq 'list' }class="active" {/if}><a
-                                        href="{$_url}pool/list">{Lang::T('IP Pool')}</a></li>
+                                        href="{$_url}pool/list">IP Pool</a></li>
                                 <li {if $_routes[0] eq 'routers' and $_routes[1] eq 'maps' }class="active" {/if}><a
                                         href="{$_url}routers/maps">{Lang::T('Routers Maps')}</a></li>
                                 {$_MENU_NETWORK}
@@ -465,7 +769,7 @@
                                 <li {if $_routes[1] eq 'Order_Voucher' }class="active" {/if}><a
                                         href="{$_url}pages/Order_Voucher">{Lang::T('Order Voucher')}</a></li>
                                 <li {if $_routes[1] eq 'Voucher' }class="active" {/if}><a
-                                        href="{$_url}pages/Voucher">{Lang::T('Voucher')} Template</a></li>
+                                        href="{$_url}pages/Voucher">{Lang::T('Theme Voucher')}</a></li>
                                 <li {if $_routes[1] eq 'Announcement' }class="active" {/if}><a
                                         href="{$_url}pages/Announcement">{Lang::T('Announcement')}</a></li>
                                 <li {if $_routes[1] eq 'Announcement_Customer' }class="active" {/if}><a
@@ -561,7 +865,7 @@
                         <li {if $_system_menu eq 'community' }class="active" {/if}>
                             <a href="{$_url}community">
                                 <i class="ion ion-chatboxes"></i>
-                                <span class="text">{Lang::T('Community')}</span>
+                                <span class="text">Community</span>
                             </a>
                         </li>
                     {/if}

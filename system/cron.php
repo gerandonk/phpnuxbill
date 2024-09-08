@@ -33,7 +33,7 @@ foreach ($d as $ds) {
         $c = ORM::for_table('tbl_customers')->where('id', $ds['customer_id'])->find_one();
         $p = ORM::for_table('tbl_plans')->where('id', $u['plan_id'])->find_one();
         $dvc = Package::getDevice($p);
-        if($_app_stage != 'demo'){
+        if ($_app_stage != 'demo') {
             if (file_exists($dvc)) {
                 require_once $dvc;
                 (new $p['device'])->remove_customer($c, $p);
@@ -77,4 +77,123 @@ foreach ($d as $ds) {
     } else {
         echo " : ACTIVE \r\n";
     }
+}
+
+
+if ($config['router_check']) {
+
+    $lockFile = $CACHE_PATH . '/router_monitor.lock';
+
+    if (!is_dir($CACHE_PATH)) {
+        echo "Directory '$CACHE_PATH' does not exist. Exiting...\n";
+        exit;
+    }
+
+    $lock = fopen($lockFile, 'c');
+
+    if ($lock === false) {
+        echo "Failed to open lock file. Exiting...\n";
+        exit;
+    }
+
+    if (!flock($lock, LOCK_EX | LOCK_NB)) {
+        echo "Script is already running. Exiting...\n";
+        fclose($lock);
+        exit;
+    }
+
+    $routers = ORM::for_table('tbl_routers')->where('enabled', '1')->find_many();
+    if (!$routers) {
+        echo "No active routers found in the database.\n";
+        flock($lock, LOCK_UN);
+        fclose($lock);
+        unlink($lockFile);
+        exit;
+    }
+
+    $offlineRouters = [];
+    $errors = [];
+
+    foreach ($routers as $router) {
+        // check if custom port
+        if (strpos($router->ip_address, ':') === false){
+            $ip = $router->ip_address;
+            $port = 8728;
+        } else {
+            [$ip, $port] = explode(':', $router->ip_address);
+        }
+        $isOnline = false;
+
+        try {
+            $timeout = 5;
+            if (is_callable('fsockopen') && false === stripos(ini_get('disable_functions'), 'fsockopen')) {
+                $fsock = @fsockopen($ip, $port, $errno, $errstr, $timeout);
+                if ($fsock) {
+                    fclose($fsock);
+                    $isOnline = true;
+                } else {
+                    throw new Exception("Unable to connect to $ip on port $port using fsockopen: $errstr ($errno)");
+                }
+            } elseif (is_callable('stream_socket_client') && false === stripos(ini_get('disable_functions'), 'stream_socket_client')) {
+                $connection = @stream_socket_client("$ip:$port", $errno, $errstr, $timeout);
+                if ($connection) {
+                    fclose($connection);
+                    $isOnline = true;
+                } else {
+                    throw new Exception("Unable to connect to $ip on port $port using stream_socket_client: $errstr ($errno)");
+                }
+            } else {
+                throw new Exception("Neither fsockopen nor stream_socket_client are enabled on the server.");
+            }
+        } catch (Exception $e) {
+            _log($e->getMessage());
+            $errors[] = "Error with router $ip: " . $e->getMessage();
+        }
+
+        if ($isOnline) {
+            $router->last_seen = date('Y-m-d H:i:s');
+            $router->status = 'Online';
+        } else {
+            $router->status = 'Offline';
+            $offlineRouters[] = $router;
+        }
+
+        $router->save();
+    }
+
+    if (!empty($offlineRouters)) {
+        $message = "Dear Administrator,\n";
+        $message .= "The following routers are offline:\n";
+        foreach ($offlineRouters as $router) {
+            $message .= "Name: {$router->name}, IP: {$router->ip_address}, Last Seen: {$router->last_seen}\n";
+        }
+        $message .= "\nPlease check the router's status and take appropriate action.\n\nBest regards,\nRouter Monitoring System";
+
+        $adminEmail = $config['mail_from'];
+        $subject = "Router Offline Alert";
+        Message::SendEmail($adminEmail, $subject, $message);
+        sendTelegram($message);
+    }
+
+    if (!empty($errors)) {
+        $message = "The following errors occurred during router monitoring:\n";
+        foreach ($errors as $error) {
+            $message .= "$error\n";
+        }
+
+        $adminEmail = $config['mail_from'];
+        $subject = "Router Monitoring Error Alert";
+        Message::SendEmail($adminEmail, $subject, $message);
+        sendTelegram($message);
+    }
+
+    if (defined('PHP_SAPI') && PHP_SAPI === 'cli') {
+        echo "Cronjob finished\n";
+    } else {
+        echo "</pre>";
+    }
+
+    flock($lock, LOCK_UN);
+    fclose($lock);
+    unlink($lockFile);
 }
