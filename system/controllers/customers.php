@@ -455,7 +455,7 @@ switch ($action) {
                         'args' => [$d['phonenumber'], $welcomeMessage]
                     ],
                     'whatsapp' => [
-                        'enabled' => isset($_POST['wa']) && $_POST['wa'] == 'wa',
+                        'enabled' => isset($_POST['wa']),
                         'method' => 'sendWhatsapp',
                         'args' => [$d['phonenumber'], $welcomeMessage]
                     ],
@@ -673,10 +673,10 @@ switch ($action) {
 
     default:
         run_hook('list_customers'); #HOOK
-        $search = _post('search');
-        $order = _post('order', 'username');
-        $filter = _post('filter', 'Active');
-        $orderby = _post('orderby', 'asc');
+        $search = _req('search');
+        $order = _req('order', 'username');
+        $filter = _req('filter', 'Active');
+        $orderby = _req('orderby', 'asc');
         $order_pos = [
             'username' => 0,
             'created_at' => 8,
