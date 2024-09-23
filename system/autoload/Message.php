@@ -174,7 +174,7 @@ class Message
         $msg = str_replace('[[package]]', $package, $msg);
         $msg = str_replace('[[price]]', Lang::moneyFormat($price), $msg);
         list($bills, $add_cost) = User::getBills($customer['id']);
-        if ($add_cost > 0) {
+        if ($add_cost != 0) {
             $note = "";
             foreach ($bills as $k => $v) {
                 $note .= $k . " : " . Lang::moneyFormat($v) . "\n";
@@ -217,7 +217,7 @@ class Message
         ) {
             if ($via == 'sms') {
                 Message::sendSMS($phone, $msg);
-            } else if ($config['user_notification_payment'] == 'email') {
+            } else if ($via == 'email') {
                 self::sendEmail($cust['email'], '[' . $config['CompanyName'] . '] ' . Lang::T("Balance Notification"), $msg);
             } else if ($via == 'wa') {
                 Message::sendWhatsapp($phone, $msg);

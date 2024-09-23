@@ -46,11 +46,12 @@
                             {$plan['type']}</span>
                     </li>
                     <li class="list-group-item">
-                        <b>{Lang::T('Plan Price')}</b> <span class="pull-right">{if $using eq
-                            'zero'}{Lang::moneyFormat(0)}
-                            {else}
-                            {Lang::moneyFormat($plan['price'])}
-                            {/if}</span>
+                        <b>{Lang::T('Plan Price')}</b> <span class="pull-right">
+                        {if !empty($plan['price_old'])}
+                            <sup style="text-decoration: line-through; color: red">{Lang::moneyFormat($plan['price_old'])}</sup>
+                                {/if}
+                        {Lang::moneyFormat($plan['price'])}
+                        </span>
                     </li>
                     {if $plan['validity']}
                         <li class="list-group-item">
@@ -65,7 +66,7 @@
                         <li class="list-group-item">
                             <b>{Lang::T('Tax')}</b> <span class="pull-right">{Lang::moneyFormat($tax)}</span>
                         </li>
-                        {if $add_cost>0}
+                        {if $add_cost!=0}
                             {foreach $bills as $k => $v}
                                 <li class="list-group-item">
                                     <b>{$k}</b> <span class="pull-right">{Lang::moneyFormat($v)}</span>
@@ -88,7 +89,7 @@
                             </li>
                         {/if}
                     {else}
-                        {if $add_cost>0}
+                        {if $add_cost!=0}
                             {foreach $bills as $k => $v}
                                 <li class="list-group-item">
                                     <b>{$k}</b> <span class="pull-right">{Lang::moneyFormat($v)}</span>
