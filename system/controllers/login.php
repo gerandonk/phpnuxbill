@@ -24,6 +24,11 @@ switch ($do) {
     case 'post':
         $username = _post('username');
         $password = _post('password');
+        $csrf_token = _post('csrf_token');
+        if (!Csrf::check($csrf_token)) {
+            _msglog('e', Lang::T('Invalid or Expired CSRF Token'));
+            r2(U . 'login');
+        }
         run_hook('customer_login'); #HOOK
         if ($username != '' and $password != '') {
             $d = ORM::for_table('tbl_customers')->where('username', $username)->find_one();
@@ -57,6 +62,11 @@ switch ($do) {
 
     case 'activation':
         if (!empty(_post('voucher_only'))) {
+            $csrf_token = _post('csrf_token');
+            if (!Csrf::check($csrf_token)) {
+                _msglog('e', Lang::T('Invalid or Expired CSRF Token'));
+                r2(U . 'login');
+            }
             $voucher = Text::alphanumeric(_post('voucher_only'), "-_.,");
             $tur = ORM::for_table('tbl_user_recharges')
                 ->where('username', $voucher)
@@ -101,7 +111,7 @@ switch ($do) {
                     _alert(Lang::T('Internet Plan Expired'), 'danger', "login");
                 }
             } else {
-                $v = ORM::for_table('tbl_voucher')->whereRaw("BINARY `code` = '$voucher'")->find_one();
+                $v = ORM::for_table('tbl_voucher')->whereRaw("BINARY code = '$voucher'")->find_one();
                 if (!$v) {
                     _alert(Lang::T('Voucher invalid'), 'danger', "login");
                 }
@@ -158,7 +168,7 @@ switch ($do) {
         } else {
             $voucher = Text::alphanumeric(_post('voucher'), "-_.,");
             $username = _post('username');
-            $v1 = ORM::for_table('tbl_voucher')->whereRaw("BINARY `code` = '$voucher'")->find_one();
+            $v1 = ORM::for_table('tbl_voucher')->whereRaw("BINARY code = '$voucher'")->find_one();
             if ($v1) {
                 // voucher exists, check customer exists or not
                 $user = ORM::for_table('tbl_customers')->where('username', $username)->find_one();
@@ -289,13 +299,16 @@ switch ($do) {
         }
     default:
         run_hook('customer_view_login'); #HOOK
+        $csrf_token = Csrf::generateAndStoreToken();
         if ($config['disable_registration'] == 'yes') {
+            $ui->assign('csrf_token', $csrf_token);
             $ui->assign('_title', Lang::T('Activation'));
             $ui->assign('code', alphanumeric(_get('code'), "-"));
-            $ui->display('user-ui/login-noreg.tpl');
+            $ui->display('customer/login-noreg.tpl');
         } else {
+            $ui->assign('csrf_token', $csrf_token);
             $ui->assign('_title', Lang::T('Login'));
-            $ui->display('user-ui/login.tpl');
+            $ui->display('customer/login.tpl');
         }
         break;
 }

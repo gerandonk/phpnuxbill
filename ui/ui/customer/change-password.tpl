@@ -1,4 +1,4 @@
-{include file="user-ui/header.tpl"}
+{include file="customer/header.tpl"}
 <!-- user-change-password -->
 
 <div class="row">
@@ -7,6 +7,7 @@
             <div class="panel-heading">{Lang::T('Change Password')}</div>
             <div class="panel-body">
                 <form class="form-horizontal" method="post" role="form" action="{$_url}accounts/change-password-post">
+                    <input type="hidden" name="csrf_token" value="{$csrf_token}">
                     <div class="form-group">
                         <label class="col-md-2 control-label">{Lang::T('Current Password')}</label>
                         <div class="col-md-6">
@@ -40,4 +41,4 @@
     </div>
 </div>
 
-{include file="user-ui/footer.tpl"}
+{include file="customer/footer.tpl"}

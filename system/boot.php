@@ -79,8 +79,8 @@ $handler = $routes[0];
 if ($handler == '') {
     $handler = 'default';
 }
-$admin = Admin::_info();
 try {
+    $admin = Admin::_info();
     $sys_render = $root_path . File::pathFixer('system/controllers/' . $handler . '.php');
     if (file_exists($sys_render)) {
         $menus = array();
@@ -128,8 +128,8 @@ try {
             $e->getMessage() . "\n" .
             $e->getTraceAsString()
     );
-    if (!Admin::getID()) {
-        $ui->display('user-ui/error.tpl'); die();
+    if (empty($_SESSION['aid'])) {
+        $ui->display('customer/error.tpl'); die();
     }
     $ui->assign("error_message", $e->getMessage() . '<br><pre>' . $e->getTraceAsString() . '</pre>');
     $ui->assign("error_title", "PHPNuxBill Crash");
@@ -141,8 +141,8 @@ try {
             $e->getMessage() . "\n" .
             $e->getTraceAsString()
     );
-    if (!Admin::getID()) {
-        $ui->display('user-ui/error.tpl'); die();
+    if (empty($_SESSION['aid'])) {
+        $ui->display('customer/error.tpl'); die();
     }
     $ui->assign("error_message", $e->getMessage() . '<br><pre>' . $e->getTraceAsString() . '</pre>');
     $ui->assign("error_title", "PHPNuxBill Crash");

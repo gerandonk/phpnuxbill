@@ -1,4 +1,4 @@
-{include file="user-ui/header.tpl"}
+{include file="customer/header.tpl"}
 
 <!-- user-phone-update -->
 
@@ -19,6 +19,7 @@
                 </div>
             </div>
             <form method="post" role="form" action="{$_url}accounts/email-update-otp">
+                <input type="hidden" name="csrf_token" value="{$csrf_token}">
                 <div class="form-group">
                     <label class="col-md-2 control-label">{Lang::T('New Email')}</label>
                     <div class="col-md-6">
@@ -34,6 +35,7 @@
                 </div>
             </form>
             <form method="post" role="form" action="{$_url}accounts/email-update-post">
+                <input type="hidden" name="csrf_token" value="{$csrf_token}">
                 <!-- Form 2 -->
                 <div class="form-group">
                     <label class="col-md-2 control-label">{Lang::T('OTP')}</label>
@@ -76,4 +78,4 @@
         </div>
     </div>
 </div>
-{include file="user-ui/footer.tpl"}
+{include file="customer/footer.tpl"}
