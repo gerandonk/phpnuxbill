@@ -326,10 +326,35 @@ $vpn = ORM::for_table('tbl_port_pool')
 $ui->assign('cf', $tcf);
 $ui->assign('vpn', $vpn);
 
-$ui->assign('unpaid', ORM::for_table('tbl_payment_gateway')
+$unpaids = [];
+$unpaid = ORM::for_table('tbl_payment_gateway')
     ->where('username', $user['username'])
     ->where('status', 1)
-    ->find_one());
+    ->find_one();
+
+// check expired payments
+if ($unpaid) {
+    try {
+        if (strtotime($unpaid['expired_date']) < time()) {
+            $unpaid->status = 4;
+            $unpaid->save();
+            $unpaid = [];
+        }
+    } catch (Throwable $e) {
+    } catch (Exception $e) {
+    }
+    try {
+        if (strtotime($unpaid['created_date'], "+24 HOUR") < time()) {
+            $unpaid->status = 4;
+            $unpaid->save();
+            $unpaid = [];
+        }
+    } catch (Throwable $e) {
+    } catch (Exception $e) {
+    }
+}
+
+$ui->assign('unpaid', $unpaids);
 $ui->assign('code', alphanumeric(_get('code'), "-"));
 
 $abills = User::getAttributes("Bill");
