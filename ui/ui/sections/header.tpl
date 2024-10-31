@@ -276,6 +276,10 @@
             font-weight: bold;
         }
 
+         .box.box-solid.box-primary > .box-header .btn {
+            color: inherit;
+        }
+
         .box-header>.fa,
         .box-header>.glyphicon,
         .box-header>.ion,
@@ -1178,14 +1182,14 @@
                         </li>
                         <li class="dropdown user user-menu">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                <img src="https://robohash.org/{$_admin['id']}?set=set3&size=100x100&bgset=bg1"
+                                <img src="{$UPLOAD_PATH}{$_admin['photo']}.thumb.jpg"
                                     onerror="this.src='{$UPLOAD_PATH}/admin.default.png'" class="user-image"
                                     alt="Avatar">
                                 <span class="hidden-xs">{$_admin['fullname']}</span>
                             </a>
                             <ul class="dropdown-menu">
                                 <li class="user-header">
-                                    <img src="https://robohash.org/{$_admin['id']}?set=set3&size=100x100&bgset=bg1"
+                                    <img src="{$UPLOAD_PATH}{$_admin['photo']}.thumb.jpg"
                                         onerror="this.src='{$UPLOAD_PATH}/admin.default.png'" class="img-circle"
                                         alt="Avatar">
                                     <p>
