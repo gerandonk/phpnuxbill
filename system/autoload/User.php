@@ -26,6 +26,15 @@ class User
         return 0;
     }
 
+    public static function getTawkToHash($email)
+    {
+        global $config;
+        if (!empty($config['tawkto_api_key']) && !Empty($email)) {
+            return hash_hmac('sha256', $email, $config['tawkto_api_key']);
+        }
+        return '';
+    }
+
     public static function getBills($id = 0)
     {
         if (!$id) {
@@ -177,8 +186,8 @@ class User
     {
         global $db_pass;
         if (isset($uid)) {
-            list($time, $token) = self::generateToken($uid);
-            setcookie('uid', $token, time() + 86400 * 30);
+            $token = self::generateToken($uid);
+            setcookie('uid', $token['token'], time() + 86400 * 30);
             return $token;
         } else {
             return false;
