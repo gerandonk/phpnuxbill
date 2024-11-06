@@ -149,24 +149,18 @@ class Package
             $exp_date->modify('first day of next month');
             $exp_date->setDate($exp_date->format('Y'), $exp_date->format('m'), $day_exp);
 
-            $min_days = 7;
-            $max_days = 35;
-
-            // If validity is more than 2 months, multiply the limit days
-            if ($p['validity'] >= 2) {
-                $min_days *= $p['validity'];
-                $max_days *= $p['validity'];
-            }
+            $min_days = 7 * $p['validity'];
+            $max_days = 35 * $p['validity'];
 
             $days_until_exp = $exp_date->diff($current_date)->days;
 
-            // If less than min_days away, move to the next month
+            // If less than min_days away, move to the next period
             while ($days_until_exp < $min_days) {
                 $exp_date->modify('+1 month');
                 $days_until_exp = $exp_date->diff($current_date)->days;
             }
 
-            // If more than max_days away, move to the previous month
+            // If more than max_days away, move to the previous period
             while ($days_until_exp > $max_days) {
                 $exp_date->modify('-1 month');
                 $days_until_exp = $exp_date->diff($current_date)->days;
@@ -175,6 +169,11 @@ class Package
             // Final check to ensure we're not less than min_days or in the past
             if ($days_until_exp < $min_days || $exp_date <= $current_date) {
                 $exp_date->modify('+1 month');
+            }
+
+            // Adjust for multiple periods
+            if ($p['validity'] > 1) {
+                $exp_date->modify('+' . ($p['validity'] - 1) . ' months');
             }
 
             $date_exp = $exp_date->format('Y-m-d');
@@ -196,25 +195,31 @@ class Package
         if ($b) {
             $lastExpired = Lang::dateAndTimeFormat($b['expiration'], $b['time']);
             $isChangePlan = false;
-            if ($b['namebp'] == $p['name_plan'] && $b['status'] == 'on') {
+            if ($b['namebp'] == $p['name_plan'] && $b['status'] == 'on' && $config['extend_expiry'] == 'yes') {
                 // if it same internet plan, expired will extend
-                if ($p['validity_unit'] == 'Months') {
-                    $date_exp = date("Y-m-d", strtotime($b['expiration'] . ' +' . $p['validity'] . ' months'));
-                    $time = $b['time'];
-                } else if ($p['validity_unit'] == 'Period') {
-                    $date_exp = date("Y-m-$day_exp", strtotime($b['expiration'] . ' +' . $p['validity'] . ' months'));
-                    $time = date("23:59:00");
-                } else if ($p['validity_unit'] == 'Days') {
-                    $date_exp = date("Y-m-d", strtotime($b['expiration'] . ' +' . $p['validity'] . ' days'));
-                    $time = $b['time'];
-                } else if ($p['validity_unit'] == 'Hrs') {
-                    $datetime = explode(' ', date("Y-m-d H:i:s", strtotime($b['expiration'] . ' ' . $b['time'] . ' +' . $p['validity'] . ' hours')));
-                    $date_exp = $datetime[0];
-                    $time = $datetime[1];
-                } else if ($p['validity_unit'] == 'Mins') {
-                    $datetime = explode(' ', date("Y-m-d H:i:s", strtotime($b['expiration'] . ' ' . $b['time'] . ' +' . $p['validity'] . ' minutes')));
-                    $date_exp = $datetime[0];
-                    $time = $datetime[1];
+                switch ($p['validity_unit']) {
+                    case 'Months':
+                        $date_exp = date("Y-m-d", strtotime($b['expiration'] . ' +' . $p['validity'] . ' months'));
+                        $time = $b['time'];
+                        break;
+                    case 'Period':
+                        $date_exp = date("Y-m-$day_exp", strtotime($b['expiration'] . ' +' . $p['validity'] . ' months'));
+                        $time = date("23:59:00");
+                        break;
+                    case 'Days':
+                        $date_exp = date("Y-m-d", strtotime($b['expiration'] . ' +' . $p['validity'] . ' days'));
+                        $time = $b['time'];
+                        break;
+                    case 'Hrs':
+                        $datetime = explode(' ', date("Y-m-d H:i:s", strtotime($b['expiration'] . ' ' . $b['time'] . ' +' . $p['validity'] . ' hours')));
+                        $date_exp = $datetime[0];
+                        $time = $datetime[1];
+                        break;
+                    case 'Mins':
+                        $datetime = explode(' ', date("Y-m-d H:i:s", strtotime($b['expiration'] . ' ' . $b['time'] . ' +' . $p['validity'] . ' minutes')));
+                        $date_exp = $datetime[0];
+                        $time = $datetime[1];
+                        break;
                 }
             } else {
                 $isChangePlan = true;
@@ -222,7 +227,7 @@ class Package
 
             //if ($b['status'] == 'on') {
             $dvc = Package::getDevice($p);
-            if ($_app_stage != 'demo') {
+            if ($_app_stage != 'Demo') {
                 try {
                     if (file_exists($dvc)) {
                         require_once $dvc;
@@ -232,7 +237,7 @@ class Package
                     }
                 } catch (Throwable $e) {
                     Message::sendTelegram(
-                        "Sistem Error. When activate Package. You need to sync manually\n" .
+                        "System Error. When activate Package. You need to sync manually\n" .
                             "Router: $router_name\n" .
                             "Customer: u$c[username]\n" .
                             "Plan: p$p[name_plan]\n" .
@@ -241,7 +246,7 @@ class Package
                     );
                 } catch (Exception $e) {
                     Message::sendTelegram(
-                        "Sistem Error. When activate Package. You need to sync manually\n" .
+                        "System Error. When activate Package. You need to sync manually\n" .
                             "Router: $router_name\n" .
                             "Customer: u$c[username]\n" .
                             "Plan: p$p[name_plan]\n" .
@@ -337,7 +342,7 @@ class Package
         } else {
             // active plan not exists
             $dvc = Package::getDevice($p);
-            if ($_app_stage != 'demo') {
+            if ($_app_stage != 'Demo') {
                 try {
                     if (file_exists($dvc)) {
                         require_once $dvc;
@@ -347,7 +352,7 @@ class Package
                     }
                 } catch (Throwable $e) {
                     Message::sendTelegram(
-                        "Sistem Error. When activate Package. You need to sync manually\n" .
+                        "System Error. When activate Package. You need to sync manually\n" .
                             "Router: $router_name\n" .
                             "Customer: u$c[username]\n" .
                             "Plan: p$p[name_plan]\n" .
@@ -356,7 +361,7 @@ class Package
                     );
                 } catch (Exception $e) {
                     Message::sendTelegram(
-                        "Sistem Error. When activate Package. You need to sync manually\n" .
+                        "System Error. When activate Package. You need to sync manually\n" .
                             "Router: $router_name\n" .
                             "Customer: u$c[username]\n" .
                             "Plan: p$p[name_plan]\n" .
@@ -525,7 +530,7 @@ class Package
         return $t->id();
     }
 
-     public static function rechargeCustomBalance($customer, $plan, $gateway, $channel, $note = '')
+    public static function rechargeCustomBalance($customer, $plan, $gateway, $channel, $note = '')
     {
         global $admin, $config;
         $plan = ORM::for_table('tbl_payment_gateway')

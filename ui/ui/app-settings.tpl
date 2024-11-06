@@ -294,7 +294,7 @@
                     </p>
                 </div>
                 <div class="form-group">
-                    <label class="col-md-3 control-label">{Lang::T('Single session Admin')}</label>
+                    <label class="col-md-3 control-label">{Lang::T('Single Admin Session')}</label>
                     <div class="col-md-5">
                         <select name="single_session" id="single_session" class="form-control">
                             <option value="no">
@@ -1049,31 +1049,28 @@
     </div>
 </form>
 
-<div class="well well-sm">
-    <legend>{Lang::T('Settings For Mikrotik')}</legend>
-    <pre>/ip hotspot walled-garden
-    add dst-host={$_domain}
-    add dst-host=*.{$_domain}</pre>
-
-    <legend>{Lang::T('Settings For Cron Expired')}</legend>
-    <pre>
-    # {Lang::T('Expired Cronjob Every 5 Minutes')}
-    */5 * * * * cd {$dir} && {$php} cron.php
-</pre>
-    {Lang::T('Choose one, above or below')}
-    <pre>
-    # {Lang::T('Expired Cronjob Every 1 Hour')}
-    0 * * * * cd {$dir} && {$php} cron.php
-</pre>
-
-    <legend>{Lang::T('Settings For Cron Reminder')}</legend>
-    <pre>
-    # {Lang::T('Reminder Cronjob Every 7 AM')}
-    0 7 * * * cd {$dir} && {$php} cron_reminder.php
-</pre>
+<div class="bs-callout bs-callout-info" id="callout-navbar-role">
+    <h4><b>{Lang::T('Settings For Mikrotik')}</b></h4>
+    <p>/ip hotspot walled-garden <br>
+        add dst-host={$_domain} <br>
+        add dst-host=*.{$_domain}
+    </p>
+    <br>
+    <h4><b>{Lang::T('Settings For Cron Expired')}</b></h4>
+    <p>
+        # {Lang::T('Expired Cronjob Every 5 Minutes [Recommended]')}<br>
+        */5 * * * * cd {$dir} && {$php} cron.php
+        <br><br>
+        # {Lang::T('Expired Cronjob Every 1 Hour')}<br>
+        0 * * * * cd {$dir} && {$php} cron.php
+    </p>
+    <br>
+    <h4><b>{Lang::T('Settings For Cron Reminder')}</b></h4>
+    <p>
+        # {Lang::T('Reminder Cronjob Every 7 AM')}<br>
+        0 7 * * * cd {$dir} && {$php} cron_reminder.php
+    </p>
 </div>
-
-
 
 <script>
     function testWa() {
@@ -1101,6 +1098,39 @@
     function testTg() {
         window.location.href = '{$_url}settings/app&testTg=test';
     }
+</script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var sectionTimeoutCheckbox = document.getElementById('enable_session_timeout');
+        var timeoutDurationInput = document.getElementById('timeout_duration_input');
+        var timeoutDurationField = document.getElementById('session_timeout_duration');
+
+        if (sectionTimeoutCheckbox.checked) {
+            timeoutDurationInput.style.display = 'block';
+            timeoutDurationField.required = true;
+        }
+
+        sectionTimeoutCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                timeoutDurationInput.style.display = 'block';
+                timeoutDurationField.required = true;
+            } else {
+                timeoutDurationInput.style.display = 'none';
+                timeoutDurationField.required = false;
+            }
+        });
+
+        document.querySelector('form').addEventListener('submit', function (event) {
+            if (sectionTimeoutCheckbox.checked && (!timeoutDurationField.value || isNaN(
+                timeoutDurationField.value))) {
+                event.preventDefault();
+                alert('Please enter a valid session timeout duration.');
+                timeoutDurationField.focus();
+            }
+        });
+    });
 </script>
 
 <script>
