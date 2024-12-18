@@ -23,7 +23,7 @@
                                 {elseif $_c['registration_username'] == 'email'}
                                     {Lang::T('Email')}
                                 {else}
-                                    {Lang::T('Username')}
+                                    {Lang::T('Usernames')}
                                 {/if}
                             </label>
                             <div class="input-group">
@@ -38,7 +38,7 @@
                                             class="glyphicon glyphicon-user"></i></span>
                                 {/if}
                                 <input type="text" class="form-control" name="username"
-                                    placeholder="{if $_c['country_code_phone']!= '' || $_c['registration_username'] == 'phone'}{$_c['country_code_phone']} {Lang::T('Phone Number')}{elseif $_c['registration_username'] == 'email'}{Lang::T('Email')}{else}{Lang::T('Username')}{/if}">
+                                    placeholder="{if $_c['country_code_phone']!= '' || $_c['registration_username'] == 'phone'}{$_c['country_code_phone']} {Lang::T('Phone Number')}{elseif $_c['registration_username'] == 'email'}{Lang::T('Email')}{else}{Lang::T('Usernames')}{/if}">
                             </div>
                         </div>
                         {if $_c['photo_register'] == 'yes'}
@@ -49,17 +49,18 @@
                         {/if}
                         <div class="form-group">
                             <label>{Lang::T('Full Name')}</label>
-                            <input type="text" required class="form-control" id="fullname" value="{$fullname}"
-                                name="fullname">
+                            <input type="text" {if $_c['man_fields_fname'] neq 'no'}required{/if} class="form-control"
+                                id="fullname" value="{$fullname}" name="fullname">
                         </div>
                         <div class="form-group">
                             <label>{Lang::T('Email')}</label>
-                            <input type="text" class="form-control" id="email" placeholder="xxxxxxx@xxxx.xx"
-                                value="{$email}" name="email">
+                            <input type="text" {if $_c['man_fields_email'] neq 'no'}required{/if} class="form-control"
+                                id="email" placeholder="xxxxxxx@xxxx.xx" value="{$email}" name="email">
                         </div>
                         <div class="form-group">
-                            <label>{Lang::T('Address')}</label>
-                            <input type="text" name="address" id="address" value="{$address}" class="form-control">
+                            <label>{Lang::T('Home Address')}</label>
+                            <input type="text" {if $_c['man_fields_address'] neq 'no'}required{/if} name="address"
+                                id="address" value="{$address}" class="form-control">
                         </div>
                         {$customFields}
                     </div>

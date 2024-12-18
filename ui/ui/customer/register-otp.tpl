@@ -40,17 +40,18 @@
                         {/if}
                         <div class="form-group">
                             <label>{Lang::T('Full Name')}</label>
-                            <input type="text" required class="form-control" id="fullname" value="{$fullname}"
-                                name="fullname">
+                            <input type="text" {if $_c['man_fields_fname'] neq 'no'}required{/if} class="form-control"
+                                id="fullname" value="{$fullname}" name="fullname">
                         </div>
                         <div class="form-group">
                             <label>{Lang::T('Email')}</label>
-                            <input type="text" class="form-control" placeholder="xxxxxx@xxx.xx" id="email"
-                                value="{$email}" name="email">
+                            <input type="text" class="form-control" {if $_c['man_fields_email'] neq 'no'}required{/if}
+                                placeholder="xxxxxx@xxx.xx" id="email" value="{$email}" name="email">
                         </div>
                         <div class="form-group">
-                            <label>{Lang::T('Address')}</label>
-                            <input type="text" name="address" id="address" value="{$address}" class="form-control">
+                            <label>{Lang::T('Home Address')}</label>
+                            <input type="text" name="address" {if $_c['man_fields_address'] neq 'no'}required{/if}
+                                id="address" value="{$address}" class="form-control">
                         </div>
                         {$customFields}
                     </div>
@@ -59,14 +60,14 @@
         </div>
         <div class="col-md-4">
             <div class="panel panel-primary">
-                <div class="panel-heading">2. {Lang::T('Username & Password')}</div>
+                <div class="panel-heading">2. {Lang::T('Usernames & Password')}</div>
                 <div class="panel-body">
                     <div class="form-container">
                         <!-- Username Field -->
                         <div class="form-group">
-                            <label>{Lang::T('Username')}</label>
+                            <label>{Lang::T('Usernames')}</label>
                             <input type="text" required class="form-control" id="username" name="username"
-                                placeholder="{Lang::T('Choose a Username')}">
+                                placeholder="{Lang::T('Choose a Usernames')}">
                         </div>
                         <!-- Password Fields -->
                         <div class="form-group">
@@ -122,7 +123,7 @@
             var s1 = document.createElement("script"),
                 s0 = document.getElementsByTagName("script")[0];
             s1.async = true;
-            s1.src='https://embed.tawk.to/{$_c['tawkto']}';
+            s1.src = 'https://embed.tawk.to/{$_c['tawkto']}';
             s1.charset = 'UTF-8';
             s1.setAttribute('crossorigin', '*');
             s0.parentNode.insertBefore(s1, s0);
