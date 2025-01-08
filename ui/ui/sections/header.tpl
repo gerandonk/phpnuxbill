@@ -1240,7 +1240,7 @@
                     {if !in_array($_admin['user_type'],['Report'])}
                     <li class="{if in_array($_system_menu, ['customers', 'map'])}active{/if} treeview">
                         <a href="#">
-                            <i class="fa fa-users"></i> <span>{Lang::T('Customer')}</span>
+                            <i class="fa fa-user"></i> <span>{Lang::T('Customer')}</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
@@ -1254,7 +1254,7 @@
                         </ul>
                     </li>
                     {$_MENU_AFTER_CUSTOMERS}
-                    <li class="{if $_system_menu eq 'plan'}active{/if} treeview">
+                    <li class="{if $_routes[0] eq 'plan' || $_routes[0] eq 'coupons'}active{/if} treeview">
                         <a href="#">
                             <i class="fa fa-ticket"></i> <span>{Lang::T('Services')}</span>
                             <span class="pull-right-container">
@@ -1263,12 +1263,18 @@
                         </a>
                         <ul class="treeview-menu">
                             <li {if $_routes[1] eq 'list' }class="active" {/if}><a
-                                    href="{$_url}plan/list">{Lang::T('Active Users')}</a></li>
+                                    href="{$_url}plan/list">{Lang::T('Active Customers')}</a></li>
+                            {if $_c['disable_voucher'] != 'yes'}
+                            <li {if $_routes[1] eq 'refill' }class="active" {/if}><a
+                                    href="{$_url}plan/refill">{Lang::T('Refill Customer')}</a></li>
+                            {/if}
                             {if $_c['disable_voucher'] != 'yes'}
                             <li {if $_routes[1] eq 'voucher' }class="active" {/if}><a
                                     href="{$_url}plan/voucher">{Lang::T('Vouchers')}</a></li>
-                            <li {if $_routes[1] eq 'refill' }class="active" {/if}><a
-                                    href="{$_url}plan/refill">{Lang::T('Refill Customer')}</a></li>
+                            {/if}
+                            {if $_c['enable_coupons'] == 'yes'}
+                            <li {if $_routes[0] eq 'coupons' }class="active" {/if}><a
+                                    href="{$_url}coupons">{Lang::T('Coupons')}</a></li>
                             {/if}
                             <li {if $_routes[1] eq 'recharge' }class="active" {/if}><a
                                     href="{$_url}plan/recharge">{Lang::T('Recharge Customer')}</a></li>
