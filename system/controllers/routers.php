@@ -23,24 +23,9 @@ $leafletpickerHeader = <<<EOT
 EOT;
 
 switch ($action) {
-    case 'maps':
-        $name = _post('name');
-        $query = ORM::for_table('tbl_routers')->where_not_equal('coordinates', '')->order_by_desc('id');
-        $query->selects(['id', 'name', 'coordinates', 'description', 'coverage', 'enabled']);
-        if ($name != '') {
-            $query->where_like('name', '%' . $name . '%');
-        }
-        $d = Paginator::findMany($query, ['name' => $name], '20', '', true);
-        $ui->assign('name', $name);
-        $ui->assign('d', $d);
-        $ui->assign('_title', Lang::T('Routers Geo Location Information'));
-        $ui->assign('xheader', $leafletpickerHeader);
-        $ui->assign('xfooter', '<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>');
-        $ui->display('routers-maps.tpl');
-        break;
     case 'add':
         run_hook('view_add_routers'); #HOOK
-        $ui->display('routers-add.tpl');
+        $ui->display('admin/routers/add.tpl');
         break;
 
     case 'edit':
@@ -53,9 +38,9 @@ switch ($action) {
         if ($d) {
             $ui->assign('d', $d);
             run_hook('view_router_edit'); #HOOK
-            $ui->display('routers-edit.tpl');
+            $ui->display('admin/routers/edit.tpl');
         } else {
-            r2(U . 'routers/list', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('routers/list'), 'e', Lang::T('Account Not Found'));
         }
         break;
 
@@ -65,7 +50,7 @@ switch ($action) {
         $d = ORM::for_table('tbl_routers')->find_one($id);
         if ($d) {
             $d->delete();
-            r2(U . 'routers/list', 's', Lang::T('Data Deleted Successfully'));
+            r2(getUrl('routers/list'), 's', Lang::T('Data Deleted Successfully'));
         }
         break;
 
@@ -109,9 +94,9 @@ switch ($action) {
             $d->enabled = $enabled;
             $d->save();
 
-            r2(U . 'routers/edit/' . $d->id(), 's', Lang::T('Data Created Successfully'));
+            r2(getUrl('routers/edit/') . $d->id(), 's', Lang::T('Data Created Successfully'));
         } else {
-            r2(U . 'routers/add', 'e', $msg);
+            r2(getUrl('routers/add'), 'e', $msg);
         }
         break;
 
@@ -197,14 +182,13 @@ switch ($action) {
                 $p->set('routers', $name);
                 $p->save();
             }
-            r2(U . 'routers/list', 's', Lang::T('Data Updated Successfully'));
+            r2(getUrl('routers/list'), 's', Lang::T('Data Updated Successfully'));
         } else {
-            r2(U . 'routers/edit/' . $id, 'e', $msg);
+            r2(getUrl('routers/edit/') . $id, 'e', $msg);
         }
         break;
 
     default:
-        $ui->assign('xfooter', '<script type="text/javascript" src="ui/lib/c/routers.js"></script>');
 
         $name = _post('name');
         $name = _post('name');
@@ -215,6 +199,6 @@ switch ($action) {
         $d = Paginator::findMany($query, ['name' => $name]);
         $ui->assign('d', $d);
         run_hook('view_list_routers'); #HOOK
-        $ui->display('routers.tpl');
+        $ui->display('admin/routers/list.tpl');
         break;
 }

@@ -66,7 +66,7 @@ switch ($action) {
                 $log .= "PLAN NOT FOUND : $tur[username], $tur[namebp], $tur[type], $tur[routers]<br>";
             }
         }
-        r2(U . 'plan/list', 's', $log);
+        r2(getUrl('plan/list'), 's', $log);
     case 'recharge':
         if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin', 'Agent', 'Sales'])) {
             _alert(Lang::T('You do not have permission to access this page'), 'danger', "dashboard");
@@ -82,7 +82,7 @@ switch ($action) {
         }
         $ui->assign('usings', $usings);
         run_hook('view_recharge'); #HOOK
-        $ui->display('recharge.tpl');
+        $ui->display('admin/plan/recharge.tpl');
         break;
 
     case 'recharge-confirm':
@@ -127,13 +127,13 @@ switch ($action) {
 
             if ($using == 'balance' && $config['enable_balance'] == 'yes') {
                 if (!$cust) {
-                    r2(U . 'plan/recharge', 'e', Lang::T('Customer not found'));
+                    r2(getUrl('plan/recharge'), 'e', Lang::T('Customer not found'));
                 }
                 if (!$plan) {
-                    r2(U . 'plan/recharge', 'e', Lang::T('Plan not found'));
+                    r2(getUrl('plan/recharge'), 'e', Lang::T('Plan not found'));
                 }
                 if ($cust['balance'] < $total_cost) {
-                    r2(U . 'plan/recharge', 'e', Lang::T('insufficient balance'));
+                    r2(getUrl('plan/recharge'), 'e', Lang::T('insufficient balance'));
                 }
                 $gateway = 'Recharge Balance';
             }
@@ -158,9 +158,9 @@ switch ($action) {
             $ui->assign('server', $server);
             $ui->assign('using', $using);
             $ui->assign('plan', $plan);
-            $ui->display('recharge-confirm.tpl');
+            $ui->display('admin/plan/recharge-confirm.tpl');
         } else {
-            r2(U . 'plan/recharge', 'e', $msg);
+            r2(getUrl('plan/recharge'), 'e', $msg);
         }
         break;
 
@@ -180,7 +180,7 @@ switch ($action) {
             $username = App::getVoucherValue($svoucher);
             $in = ORM::for_table('tbl_transactions')->where('username', $username)->order_by_desc('id')->find_one();
             Package::createInvoice($in);
-            $ui->display('invoice.tpl');
+            $ui->display('admin/plan/invoice.tpl');
             die();
         }
 
@@ -217,13 +217,13 @@ switch ($action) {
             if ($using == 'balance' && $config['enable_balance'] == 'yes') {
                 //$plan = ORM::for_table('tbl_plans')->find_one($planId);
                 if (!$cust) {
-                    r2(U . 'plan/recharge', 'e', Lang::T('Customer not found'));
+                    r2(getUrl('plan/recharge'), 'e', Lang::T('Customer not found'));
                 }
                 if (!$plan) {
-                    r2(U . 'plan/recharge', 'e', Lang::T('Plan not found'));
+                    r2(getUrl('plan/recharge'), 'e', Lang::T('Plan not found'));
                 }
                 if ($cust['balance'] < $total_cost) {
-                    r2(U . 'plan/recharge', 'e', Lang::T('insufficient balance'));
+                    r2(getUrl('plan/recharge'), 'e', Lang::T('insufficient balance'));
                 }
                 $gateway = 'Recharge Balance';
             }
@@ -239,13 +239,13 @@ switch ($action) {
                 $in = ORM::for_table('tbl_transactions')->where('username', $cust['username'])->order_by_desc('id')->find_one();
                 Package::createInvoice($in);
                 App::setVoucher($svoucher, $cust['username']);
-                $ui->display('invoice.tpl');
+                $ui->display('admin/plan/invoice.tpl');
                 _log('[' . $admin['username'] . ']: ' . 'Recharge ' . $cust['username'] . ' [' . $in['plan_name'] . '][' . Lang::moneyFormat($in['price']) . ']', $admin['user_type'], $admin['id']);
             } else {
-                r2(U . 'plan/recharge', 'e', "Failed to recharge account");
+                r2(getUrl('plan/recharge'), 'e', "Failed to recharge account");
             }
         } else {
-            r2(U . 'plan/recharge', 'e', $msg);
+            r2(getUrl('plan/recharge'), 'e', $msg);
         }
         break;
 
@@ -257,13 +257,13 @@ switch ($action) {
             $c = ORM::for_table('tbl_customers')->where('username', $in['username'])->find_one();
             if ($c) {
                 Message::sendInvoice($c, $in);
-                r2(U . 'plan/view/' . $id, 's', "Success send to customer");
+                r2(getUrl('plan/view/') . $id, 's', "Success send to customer");
             }
-            r2(U . 'plan/view/' . $id, 'd', "Customer not found");
+            r2(getUrl('plan/view/') . $id, 'd', "Customer not found");
         }
         Package::createInvoice($in);
         $ui->assign('_title', 'View Invoice');
-        $ui->display('invoice.tpl');
+        $ui->display('admin/plan/invoice.tpl');
         break;
 
 
@@ -285,7 +285,7 @@ switch ($action) {
             $ui->assign('date', Lang::dateAndTimeFormat($d['recharged_on'], $d['recharged_time']));
         }
         run_hook('print_invoice'); #HOOK
-        $ui->display('invoice-print.tpl');
+        $ui->display('admin/plan/invoice-print.tpl');
         break;
 
     case 'edit':
@@ -312,9 +312,9 @@ switch ($action) {
             $ui->assign('p', $ps);
             run_hook('view_edit_customer_plan'); #HOOK
             $ui->assign('_title', 'Edit Plan');
-            $ui->display('plan-edit.tpl');
+            $ui->display('admin/plan/edit.tpl');
         } else {
-            r2(U . 'plan/list', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('plan/list'), 'e', Lang::T('Account Not Found'));
         }
         break;
 
@@ -339,7 +339,7 @@ switch ($action) {
             }
             $d->delete();
             _log('[' . $admin['username'] . ']: ' . 'Delete Plan for Customer ' . $c['username'] . '  [' . $in['plan_name'] . '][' . Lang::moneyFormat($in['price']) . ']', $admin['user_type'], $admin['id']);
-            r2(U . 'plan/list', 's', Lang::T('Data Deleted Successfully'));
+            r2(getUrl('plan/list'), 's', Lang::T('Data Deleted Successfully'));
         }
         break;
 
@@ -405,9 +405,9 @@ switch ($action) {
             }
             $d->save();
             _log('[' . $admin['username'] . ']: ' . 'Edit Plan for Customer ' . $d['username'] . ' to [' . $d['namebp'] . '][' . Lang::moneyFormat($p['price']) . ']', $admin['user_type'], $admin['id']);
-            r2(U . 'plan/list', 's', Lang::T('Data Updated Successfully'));
+            r2(getUrl('plan/list'), 's', Lang::T('Data Updated Successfully'));
         } else {
-            r2(U . 'plan/edit/' . $id, 'e', $msg);
+            r2(getUrl('plan/edit/') . $id, 'e', $msg);
         }
         break;
 
@@ -510,7 +510,7 @@ switch ($action) {
         $ui->assign('search', $search);
         $ui->assign('page', $page);
         run_hook('view_list_voucher'); #HOOK
-        $ui->display('voucher.tpl');
+        $ui->display('admin/voucher/list.tpl');
         break;
 
     case 'add-voucher':
@@ -525,7 +525,7 @@ switch ($action) {
         $r = ORM::for_table('tbl_routers')->where('enabled', '1')->find_many();
         $ui->assign('r', $r);
         run_hook('view_add_voucher'); #HOOK
-        $ui->display('voucher-add.tpl');
+        $ui->display('admin/voucher/add.tpl');
         break;
 
     case 'remove-voucher':
@@ -544,7 +544,7 @@ switch ($action) {
                     $jml++;
                 }
             }
-            r2(U . 'plan/voucher', 's', "$jml " . Lang::T('Data Deleted Successfully'));
+            r2(getUrl('plan/voucher'), 's', "$jml " . Lang::T('Data Deleted Successfully'));
         }
     case 'print-voucher':
         $from_id = _post('from_id');
@@ -684,7 +684,7 @@ switch ($action) {
         //for counting pagebreak
         $ui->assign('jml', 0);
         run_hook('view_print_voucher'); #HOOK
-        $ui->display('print-voucher.tpl');
+        $ui->display('admin/print/voucher.tpl');
         break;
     case 'voucher-post':
         if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin', 'Agent', 'Sales'])) {
@@ -791,16 +791,16 @@ switch ($action) {
                 $ui->assign('from_id', 0);
                 $ui->assign('vpl', '3');
                 $ui->assign('pagebreak', $voucherPerPage);
-                $ui->display('print-voucher.tpl');
+                $ui->display('admin/print/voucher.tpl');
             }
 
             if ($numbervoucher == 1) {
-                r2(U . 'plan/voucher-view/' . $d->id(), 's', Lang::T('Create Vouchers Successfully'));
+                r2(getUrl('plan/voucher-view/') . $d->id(), 's', Lang::T('Create Vouchers Successfully'));
             }
 
-            r2(U . 'plan/voucher', 's', Lang::T('Create Vouchers Successfully'));
+            r2(getUrl('plan/voucher'), 's', Lang::T('Create Vouchers Successfully'));
         } else {
-            r2(U . 'plan/add-voucher/' . $id, 'e', $msg);
+            r2(getUrl('plan/add-voucher/') . $id, 'e', $msg);
         }
         break;
 
@@ -855,11 +855,11 @@ switch ($action) {
             $voucher = ORM::for_table('tbl_voucher')
                 ->find_one($id);
             if (!in_array($voucher['generated_by'], $sales)) {
-                r2(U . 'plan/voucher/', 'e', Lang::T('Voucher Not Found'));
+                r2(getUrl('plan/voucher/'), 'e', Lang::T('Voucher Not Found'));
             }
         }
         if (!$voucher) {
-            r2(U . 'plan/voucher/', 'e', Lang::T('Voucher Not Found'));
+            r2(getUrl('plan/voucher/'), 'e', Lang::T('Voucher Not Found'));
         }
         $plan = ORM::for_table('tbl_plans')->find_one($voucher['id_plan']);
         if ($voucher && $plan) {
@@ -891,9 +891,9 @@ switch ($action) {
             $content .= Lang::pad($config['note'], ' ', 2) . "\n";
             $ui->assign('_title', Lang::T('View'));
             $ui->assign('whatsapp', urlencode("```$content```"));
-            $ui->display('voucher-view.tpl');
+            $ui->display('admin/voucher/view.tpl');
         } else {
-            r2(U . 'plan/voucher/', 'e', Lang::T('Voucher Not Found'));
+            r2(getUrl('plan/voucher/'), 'e', Lang::T('Voucher Not Found'));
         }
         break;
     case 'voucher-delete':
@@ -905,7 +905,7 @@ switch ($action) {
         $d = ORM::for_table('tbl_voucher')->find_one($id);
         if ($d) {
             $d->delete();
-            r2(U . 'plan/voucher', 's', Lang::T('Data Deleted Successfully'));
+            r2(getUrl('plan/voucher'), 's', Lang::T('Data Deleted Successfully'));
         }
         break;
 
@@ -916,7 +916,7 @@ switch ($action) {
         $ui->assign('xfooter', $select2_customer);
         $ui->assign('_title', Lang::T('Refill Account'));
         run_hook('view_refill'); #HOOK
-        $ui->display('refill.tpl');
+        $ui->display('admin/plan/refill.tpl');
 
         break;
 
@@ -936,12 +936,12 @@ switch ($action) {
                 $v1->save();
                 $in = ORM::for_table('tbl_transactions')->where('username', $user['username'])->order_by_desc('id')->find_one();
                 Package::createInvoice($in);
-                $ui->display('invoice.tpl');
+                $ui->display('admin/plan/invoice.tpl');
             } else {
-                r2(U . 'plan/refill', 'e', "Failed to refill account");
+                r2(getUrl('plan/refill'), 'e', "Failed to refill account");
             }
         } else {
-            r2(U . 'plan/refill', 'e', Lang::T('Voucher Not Valid'));
+            r2(getUrl('plan/refill'), 'e', Lang::T('Voucher Not Valid'));
         }
         break;
     case 'deposit':
@@ -956,7 +956,7 @@ switch ($action) {
             $ui->assign('p', ORM::for_table('tbl_plans')->where('enabled', '1')->where('type', 'Balance')->find_many());
         }
         run_hook('view_deposit'); #HOOK
-        $ui->display('deposit.tpl');
+        $ui->display('admin/plan/deposit.tpl');
         break;
     case 'deposit-post':
         if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin', 'Agent', 'Sales'])) {
@@ -971,7 +971,7 @@ switch ($action) {
         if (App::getVoucherValue($svoucher)) {
             $in = ORM::for_table('tbl_transactions')->find_one(App::getVoucherValue($svoucher));
             Package::createInvoice($in);
-            $ui->display('invoice.tpl');
+            $ui->display('admin/plan/invoice.tpl');
             die();
         }
 
@@ -987,9 +987,9 @@ switch ($action) {
                 if (!empty($svoucher)) {
                     App::setVoucher($svoucher, $trxId);
                 }
-                $ui->display('invoice.tpl');
+                $ui->display('admin/plan/invoice.tpl');
             } else {
-                r2(U . 'plan/refill', 'e', "Failed to refill account");
+                r2(getUrl('plan/refill'), 'e', "Failed to refill account");
             }
         } else if (!empty($user) && !empty($plan)) {
             $p = ORM::for_table('tbl_plans')->find_one($plan);
@@ -1000,12 +1000,12 @@ switch ($action) {
                 if (!empty($svoucher)) {
                     App::setVoucher($svoucher, $trxId);
                 }
-                $ui->display('invoice.tpl');
+                $ui->display('admin/plan/invoice.tpl');
             } else {
-                r2(U . 'plan/refill', 'e', "Failed to refill account");
+                r2(getUrl('plan/refill'), 'e', "Failed to refill account");
             }
         } else {
-            r2(U . 'plan/refill', 'e', "All field is required");
+            r2(getUrl('plan/refill'), 'e', "All field is required");
         }
         break;
     case 'extend':
@@ -1013,7 +1013,7 @@ switch ($action) {
         $days = $routes[3];
         $svoucher = $_GET['svoucher'];
         if (App::getVoucherValue($svoucher)) {
-            r2(U . 'plan', 's', "Extend already done");
+            r2(getUrl('plan'), 's', "Extend already done");
         }
         $tur = ORM::for_table('tbl_user_recharges')->find_one($id);
         $status = $tur['status'];
@@ -1045,23 +1045,22 @@ switch ($action) {
                     $tur->status = "on";
                     $tur->save();
                 } else {
-                    r2(U . 'plan', 's', "Plan not found");
+                    r2(getUrl('plan'), 's', "Plan not found");
                 }
             } else {
-                r2(U . 'plan', 's', "Customer not found");
+                r2(getUrl('plan'), 's', "Customer not found");
             }
             Message::sendTelegram("#u$tur[username] #extend #" . $p['type'] . " \n" . $p['name_plan'] .
                 "\nLocation: " . $p['routers'] .
                 "\nCustomer: " . $c['fullname'] .
                 "\nNew Expired: " . Lang::dateAndTimeFormat($expiration, $tur['time']));
             _log("$admin[fullname] extend Customer $tur[customer_id] $tur[username] for $days days", $admin['user_type'], $admin['id']);
-            r2(U . 'plan', 's', "Extend until $expiration");
+            r2(getUrl('plan'), 's', "Extend until $expiration");
         } else {
-            r2(U . 'plan', 's', "Customer is not expired yet");
+            r2(getUrl('plan'), 's', "Customer is not expired yet");
         }
         break;
     default:
-        $ui->assign('xfooter', '<script type="text/javascript" src="ui/lib/c/plan.js"></script>');
         $ui->assign('_title', Lang::T('Customer'));
         $search = _post('search');
         $status = _req('status');
@@ -1102,6 +1101,6 @@ switch ($action) {
         $d = Paginator::findMany($query, ['search' => $search], 25, $append_url);
         run_hook('view_list_billing'); #HOOK
         $ui->assign('d', $d);
-        $ui->display('plan.tpl');
+        $ui->display('admin/plan/active.tpl');
         break;
 }

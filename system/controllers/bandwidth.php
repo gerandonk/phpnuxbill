@@ -13,12 +13,11 @@ $action = $routes['1'];
 $ui->assign('_admin', $admin);
 
 if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin'])) {
-    r2(U . "dashboard", 'e', Lang::T('You do not have permission to access this page'));
+    r2(getUrl('dashboard'), 'e', Lang::T('You do not have permission to access this page'));
 }
 
 switch ($action) {
     case 'list':
-        $ui->assign('xfooter', '<script type="text/javascript" src="ui/lib/c/bandwidth.js"></script>');
         run_hook('view_list_bandwidth'); #HOOK
         $name = _post('name');
         if ($name != '') {
@@ -30,7 +29,7 @@ switch ($action) {
         }
 
         $ui->assign('d', $d);
-        $ui->display('bandwidth.tpl');
+        $ui->display('admin/bandwidth/list.tpl');
         break;
 
     case 'add':
@@ -38,7 +37,7 @@ switch ($action) {
             _alert(Lang::T('You do not have permission to access this page'), 'danger', "dashboard");
         }
         run_hook('view_add_bandwidth'); #HOOK
-        $ui->display('bandwidth-add.tpl');
+        $ui->display('admin/bandwidth/add.tpl');
         break;
 
     case 'edit':
@@ -51,9 +50,9 @@ switch ($action) {
         if ($d) {
             $ui->assign('burst', explode(" ", $d['burst']));
             $ui->assign('d', $d);
-            $ui->display('bandwidth-edit.tpl');
+            $ui->display('admin/bandwidth/edit.tpl');
         } else {
-            r2(U . 'bandwidth/list', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('bandwidth/list'), 'e', Lang::T('Account Not Found'));
         }
         break;
 
@@ -66,7 +65,7 @@ switch ($action) {
         $d = ORM::for_table('tbl_bandwidth')->find_one($id);
         if ($d) {
             $d->delete();
-            r2(U . 'bandwidth/list', 's', Lang::T('Data Deleted Successfully'));
+            r2(getUrl('bandwidth/list'), 's', Lang::T('Data Deleted Successfully'));
         }
         break;
 
@@ -123,9 +122,9 @@ switch ($action) {
             $d->burst = $burst;
             $d->save();
 
-            r2(U . 'bandwidth/list', 's', Lang::T('Data Created Successfully'));
+            r2(getUrl('bandwidth/list'), 's', Lang::T('Data Created Successfully'));
         } else {
-            r2(U . 'bandwidth/add', 'e', $msg);
+            r2(getUrl('bandwidth/add'), 'e', $msg);
         }
         break;
 
@@ -179,12 +178,12 @@ switch ($action) {
             $d->burst = $burst;
             $d->save();
 
-            r2(U . 'bandwidth/list', 's', Lang::T('Data Updated Successfully'));
+            r2(getUrl('bandwidth/list'), 's', Lang::T('Data Updated Successfully'));
         } else {
-            r2(U . 'bandwidth/edit/' . $id, 'e', $msg);
+            r2(getUrl('bandwidth/edit/') . $id, 'e', $msg);
         }
         break;
 
     default:
-        $ui->display('a404.tpl');
+        $ui->display('admin/404.tpl');
 }

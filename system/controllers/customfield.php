@@ -38,9 +38,9 @@ switch ($action) {
             });
         }
         if(file_put_contents($fieldPath, json_encode($datas))){
-            r2(U . 'customfield', 's', 'Successfully saved custom fields!');
+            r2(getUrl('customfield'), 's', 'Successfully saved custom fields!');
         }else{
-            r2(U . 'customfield', 'e', 'Failed to save custom fields!');
+            r2(getUrl('customfield'), 'e', 'Failed to save custom fields!');
         }
     default:
         $fields = [];
@@ -48,6 +48,6 @@ switch ($action) {
             $fields = json_decode(file_get_contents($fieldPath), true);
         }
         $ui->assign('fields', $fields);
-        $ui->display('customfield.tpl');
+        $ui->display('admin/settings/customfield.tpl');
         break;
 }

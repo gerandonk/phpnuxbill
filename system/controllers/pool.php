@@ -20,7 +20,6 @@ require_once $DEVICE_PATH . DIRECTORY_SEPARATOR . 'MikrotikPppoe' . '.php';
 
 switch ($action) {
     case 'list':
-        $ui->assign('xfooter', '<script type="text/javascript" src="ui/lib/c/pool.js"></script>');
 
         $name = _post('name');
         if ($name != '') {
@@ -33,14 +32,14 @@ switch ($action) {
 
         $ui->assign('d', $d);
         run_hook('view_pool'); #HOOK
-        $ui->display('pool.tpl');
+        $ui->display('admin/pool/list.tpl');
         break;
 
     case 'add':
         $r = ORM::for_table('tbl_routers')->find_many();
         $ui->assign('r', $r);
         run_hook('view_add_pool'); #HOOK
-        $ui->display('pool-add.tpl');
+        $ui->display('admin/pool/add.tpl');
         break;
 
     case 'edit':
@@ -49,9 +48,9 @@ switch ($action) {
         if ($d) {
             $ui->assign('d', $d);
             run_hook('view_edit_pool'); #HOOK
-            $ui->display('pool-edit.tpl');
+            $ui->display('admin/pool/edit.tpl');
         } else {
-            r2(U . 'pool/list', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('pool/list'), 'e', Lang::T('Account Not Found'));
         }
         break;
 
@@ -65,7 +64,7 @@ switch ($action) {
             }
             $d->delete();
 
-            r2(U . 'pool/list', 's', Lang::T('Data Deleted Successfully'));
+            r2(getUrl('pool/list'), 's', Lang::T('Data Deleted Successfully'));
         }
         break;
 
@@ -78,7 +77,7 @@ switch ($action) {
                 $log .= 'DONE: ' . $pool['pool_name'] . ': ' . $pool['range_ip'] . '<br>';
             }
         }
-        r2(U . 'pool/list', 's', $log);
+        r2(getUrl('pool/list'), 's', $log);
         break;
     case 'add-post':
         $name = _post('name');
@@ -108,9 +107,9 @@ switch ($action) {
                 (new MikrotikPppoe())->add_pool($b);
             }
             $b->save();
-            r2(U . 'pool/list', 's', Lang::T('Data Created Successfully'));
+            r2(getUrl('pool/list'), 's', Lang::T('Data Created Successfully'));
         } else {
-            r2(U . 'pool/add', 'e', $msg);
+            r2(getUrl('pool/add'), 'e', $msg);
         }
         break;
 
@@ -143,13 +142,12 @@ switch ($action) {
                 (new MikrotikPppoe())->update_pool($old, $d);
             }
 
-            r2(U . 'pool/list', 's', Lang::T('Data Updated Successfully'));
+            r2(getUrl('pool/list'), 's', Lang::T('Data Updated Successfully'));
         } else {
-            r2(U . 'pool/edit/' . $id, 'e', $msg);
+            r2(getUrl('pool/edit/') . $id, 'e', $msg);
         }
-		
+
     case 'port':
-        $ui->assign('xfooter', '<script type="text/javascript" src="ui/lib/c/pool.js"></script>');
 
         $name = _post('name');
         if ($name != '') {
@@ -162,14 +160,14 @@ switch ($action) {
 
         $ui->assign('d', $d);
         run_hook('view_port'); #HOOK
-        $ui->display('port.tpl');
+        $ui->display('admin/port/list.tpl');
         break;
 
     case 'add-port':
         $r = ORM::for_table('tbl_routers')->find_many();
         $ui->assign('r', $r);
         run_hook('view_add_port'); #HOOK
-        $ui->display('port-add.tpl');
+        $ui->display('admin/port/add.tpl');
         break;
 
     case 'edit-port':
@@ -178,9 +176,9 @@ switch ($action) {
         if ($d) {
             $ui->assign('d', $d);
             run_hook('view_edit_port'); #HOOK
-            $ui->display('port-edit.tpl');
+            $ui->display('admin/port/edit.tpl');
         } else {
-            r2(U . 'pool/port', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('pool/port'), 'e', Lang::T('Account Not Found'));
         }
         break;
 
@@ -191,7 +189,7 @@ switch ($action) {
         if ($d) {
             $d->delete();
 
-            r2(U . 'pool/port', 's', Lang::T('Data Deleted Successfully'));
+            r2(getUrl('pool/port'), 's', Lang::T('Data Deleted Successfully'));
         }
         break;
 
@@ -204,7 +202,7 @@ switch ($action) {
                 $log .= 'DONE: ' . $pool['port_name'] . ': ' . $pool['range_port'] . '<br>';
             }
         }
-        r2(U . 'pool/list', 's', $log);
+        r2(getUrl('pool/list'), 's', $log);
         break;
     case 'add-port-post':
         $name = _post('name');
@@ -231,21 +229,21 @@ switch ($action) {
             $b->range_port = $port_range;
             $b->routers = $routers;
             $b->save();
-            r2(U . 'pool/port', 's', Lang::T('Data Created Successfully'));
+            r2(getUrl('pool/port'), 's', Lang::T('Data Created Successfully'));
         } else {
-            r2(U . 'pool/add-port', 'e', $msg);
+            r2(getUrl('pool/add-port'), 'e', $msg);
         }
         break;
 
 
     case 'edit-port-post':
-		$name = _post('name');
+        $name = _post('name');
         $public_ip = _post('public_ip');
         $range_port = _post('range_port');
         $routers = _post('routers');
         run_hook('edit_port'); #HOOK
         $msg = '';
-		$msg = '';
+        $msg = '';
         if (Validator::Length($name, 30, 2) == false) {
             $msg .= 'Name should be between 3 to 30 characters' . '<br>';
         }
@@ -261,20 +259,18 @@ switch ($action) {
         }
 
         if ($msg == '') {
-			$d->port_name = $name;
+            $d->port_name = $name;
             $d->public_ip = $public_ip;
             $d->range_port = $range_port;
             $d->routers = $routers;
             $d->save();
 
-            
-
-            r2(U . 'pool/port', 's', Lang::T('Data Updated Successfully'));
+            r2(getUrl('pool/port'), 's', Lang::T('Data Updated Successfully'));
         } else {
-            r2(U . 'pool/edit-port/' . $id, 'e', $msg);
+            r2(getUrl('pool/edit-port/') . $id, 'e', $msg);
         }
         break;
 
     default:
-        r2(U . 'pool/list/', 's', '');
+        r2(getUrl('pool/list/'), 's', '');
 }

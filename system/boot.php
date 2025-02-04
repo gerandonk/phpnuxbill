@@ -96,7 +96,7 @@ try {
         foreach ($menu_registered as $menu) {
             if ($menu['admin'] && _admin(false)) {
                 if (count($menu['auth']) == 0 || in_array($admin['user_type'], $menu['auth'])) {
-                    $menus[$menu['position']] .= '<li' . (($routes[1] == $menu['function']) ? ' class="active"' : '') . '><a href="' . U . 'plugin/' . $menu['function'] . '">';
+                    $menus[$menu['position']] .= '<li' . (($routes[1] == $menu['function']) ? ' class="active"' : '') . '><a href="' . getUrl('plugin/' . $menu['function']) . '">';
                     if (!empty($menu['icon'])) {
                         $menus[$menu['position']] .= '<i class="' . $menu['icon'] . '"></i>';
                     }
@@ -107,7 +107,7 @@ try {
                     $menus[$menu['position']] .= '<span class="text">' . $menu['name'] . '</span></a></li>';
                 }
             } else if (!$menu['admin'] && _auth(false)) {
-                $menus[$menu['position']] .= '<li' . (($routes[1] == $menu['function']) ? ' class="active"' : '') . '><a href="' . U . 'plugin/' . $menu['function'] . '">';
+                $menus[$menu['position']] .= '<li' . (($routes[1] == $menu['function']) ? ' class="active"' : '') . '><a href="' . getUrl('plugin/' . $menu['function']) . '">';
                 if (!empty($menu['icon'])) {
                     $menus[$menu['position']] .= '<i class="' . $menu['icon'] . '"></i>';
                 }
@@ -124,7 +124,11 @@ try {
         unset($menus, $menu_registered);
         include($sys_render);
     } else {
-        r2(U . 'dashboard', 'e', 'not found');
+        // header 404
+        header("HTTP/1.0 404 Not Found");
+        header("Content-Type: text/html; charset=utf-8");
+        echo "404 Not Found";
+        die();
     }
 } catch (Throwable $e) {
     Message::sendTelegram(
@@ -137,7 +141,7 @@ try {
     }
     $ui->assign("error_message", $e->getMessage() . '<br><pre>' . $e->getTraceAsString() . '</pre>');
     $ui->assign("error_title", "PHPNuxBill Crash");
-    $ui->display('error.tpl');
+    $ui->display('admin/error.tpl');
     die();
 } catch (Exception $e) {
     Message::sendTelegram(
@@ -150,6 +154,6 @@ try {
     }
     $ui->assign("error_message", $e->getMessage() . '<br><pre>' . $e->getTraceAsString() . '</pre>');
     $ui->assign("error_title", "PHPNuxBill Crash");
-    $ui->display('error.tpl');
+    $ui->display('admin/error.tpl');
     die();
 }

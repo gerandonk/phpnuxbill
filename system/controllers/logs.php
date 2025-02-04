@@ -85,7 +85,7 @@ switch ($action) {
         $keep = _post('keep');
         if (!empty($keep)) {
             ORM::raw_execute("DELETE FROM tbl_logs WHERE UNIX_TIMESTAMP(date) < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL $keep DAY))");
-            r2(U . "logs/list/", 's', "Delete logs older than $keep days");
+            r2(getUrl('logs/list/'), 's', "Delete logs older than $keep days");
         }
         if ($q != '') {
             $query = ORM::for_table('tbl_logs')->where_like('description', '%' . $q . '%')->order_by_desc('id');
@@ -97,14 +97,14 @@ switch ($action) {
 
         $ui->assign('d', $d);
         $ui->assign('q', $q);
-        $ui->display('logs.tpl');
+        $ui->display('admin/logs/system.tpl');
         break;
     case 'radius':
         $q = (_post('q') ? _post('q') : _get('q'));
         $keep = _post('keep');
         if (!empty($keep)) {
             ORM::raw_execute("DELETE FROM radpostauth WHERE UNIX_TIMESTAMP(authdate) < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL $keep DAY))", [], 'radius');
-            r2(U . "logs/radius/", 's', "Delete logs older than $keep days");
+            r2(getUrl('logs/radius/'), 's', "Delete logs older than $keep days");
         }
         if ($q != '') {
             $query = ORM::for_table('radpostauth', 'radius')->where_like('username', '%' . $q . '%')->order_by_desc('id');
@@ -116,10 +116,10 @@ switch ($action) {
 
         $ui->assign('d', $d);
         $ui->assign('q', $q);
-        $ui->display('logs-radius.tpl');
+        $ui->display('admin/logs/radius.tpl');
         break;
 
 
     default:
-        r2(U . 'logs/list/', 's', '');
+        r2(getUrl('logs/list/'), 's', '');
 }

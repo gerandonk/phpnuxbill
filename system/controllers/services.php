@@ -33,7 +33,7 @@ switch ($action) {
                     }
                 }
             }
-            r2(U . 'services/hotspot', 's', $log);
+            r2(getUrl('services/hotspot'), 's', $log);
         } else if ($routes['2'] == 'pppoe') {
             $plans = ORM::for_table('tbl_plans')->where('type', 'PPPOE')->find_many();
             $log = '';
@@ -49,11 +49,10 @@ switch ($action) {
                     }
                 }
             }
-            r2(U . 'services/pppoe', 's', $log);
+            r2(getUrl('services/pppoe'), 's', $log);
         }
-        r2(U . 'services/hotspot', 'w', 'Unknown command');
+        r2(getUrl('services/hotspot'), 'w', 'Unknown command');
     case 'hotspot':
-        $ui->assign('xfooter', '<script type="text/javascript" src="ui/lib/c/hotspot.js"></script>');
         $name = _req('name');
         $type1 = _req('type1');
         $type2 = _req('type2');
@@ -139,7 +138,7 @@ switch ($action) {
         $d = Paginator::findMany($query, ['name' => $name], 20, $append_url);
         $ui->assign('d', $d);
         run_hook('view_list_plans'); #HOOK
-        $ui->display('hotspot.tpl');
+        $ui->display('admin/hotspot/list.tpl');
         break;
     case 'add':
         $d = ORM::for_table('tbl_bandwidth')->find_many();
@@ -156,7 +155,7 @@ switch ($action) {
         }
         $ui->assign('devices', $devices);
         run_hook('view_add_plan'); #HOOK
-        $ui->display('hotspot-add.tpl');
+        $ui->display('admin/hotspot/add.tpl');
         break;
 
     case 'edit':
@@ -191,9 +190,9 @@ switch ($action) {
             }
             $ui->assign('exps', $exps);
             run_hook('view_edit_plan'); #HOOK
-            $ui->display('hotspot-edit.tpl');
+            $ui->display('admin/hotspot/edit.tpl');
         } else {
-            r2(U . 'services/hotspot', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('services/hotspot'), 'e', Lang::T('Account Not Found'));
         }
         break;
 
@@ -214,7 +213,7 @@ switch ($action) {
             }
             $d->delete();
 
-            r2(U . 'services/hotspot', 's', Lang::T('Data Deleted Successfully'));
+            r2(getUrl('services/hotspot'), 's', Lang::T('Data Deleted Successfully'));
         }
         break;
 
@@ -307,9 +306,9 @@ switch ($action) {
                     new Exception(Lang::T("Devices Not Found"));
                 }
             }
-            r2(U . 'services/edit/' . $d->id(), 's', Lang::T('Data Created Successfully'));
+            r2(getUrl('services/edit/') . $d->id(), 's', Lang::T('Data Created Successfully'));
         } else {
-            r2(U . 'services/add', 'e', $msg);
+            r2(getUrl('services/add'), 'e', $msg);
         }
         break;
 
@@ -420,15 +419,14 @@ switch ($action) {
                     new Exception(Lang::T("Devices Not Found"));
                 }
             }
-            r2(U . 'services/hotspot', 's', Lang::T('Data Updated Successfully'));
+            r2(getUrl('services/hotspot'), 's', Lang::T('Data Updated Successfully'));
         } else {
-            r2(U . 'services/edit/' . $id, 'e', $msg);
+            r2(getUrl('services/edit/') . $id, 'e', $msg);
         }
         break;
 
     case 'pppoe':
         $ui->assign('_title', Lang::T('PPPOE Plans'));
-        $ui->assign('xfooter', '<script type="text/javascript" src="ui/lib/c/pppoe.js"></script>');
 
         $name = _post('name');
         $name = _req('name');
@@ -516,7 +514,7 @@ switch ($action) {
 
         $ui->assign('d', $d);
         run_hook('view_list_ppoe'); #HOOK
-        $ui->display('pppoe.tpl');
+        $ui->display('admin/pppoe/list.tpl');
         break;
 
     case 'pppoe-add':
@@ -535,7 +533,7 @@ switch ($action) {
         }
         $ui->assign('devices', $devices);
         run_hook('view_add_ppoe'); #HOOK
-        $ui->display('pppoe-add.tpl');
+        $ui->display('admin/pppoe/add.tpl');
         break;
 
     case 'pppoe-edit':
@@ -578,9 +576,9 @@ switch ($action) {
             }
             $ui->assign('exps', $exps);
             run_hook('view_edit_ppoe'); #HOOK
-            $ui->display('pppoe-edit.tpl');
+            $ui->display('admin/pppoe/edit.tpl');
         } else {
-            r2(U . 'services/pppoe', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('services/pppoe'), 'e', Lang::T('Account Not Found'));
         }
         break;
 
@@ -602,7 +600,7 @@ switch ($action) {
             }
             $d->delete();
 
-            r2(U . 'services/pppoe', 's', Lang::T('Data Deleted Successfully'));
+            r2(getUrl('services/pppoe'), 's', Lang::T('Data Deleted Successfully'));
         }
         break;
 
@@ -700,9 +698,9 @@ switch ($action) {
                     new Exception(Lang::T("Devices Not Found"));
                 }
             }
-            r2(U . 'services/pppoe', 's', Lang::T('Data Created Successfully'));
+            r2(getUrl('services/pppoe'), 's', Lang::T('Data Created Successfully'));
         } else {
-            r2(U . 'services/pppoe-add', 'e', $msg);
+            r2(getUrl('services/pppoe-add'), 'e', $msg);
         }
         break;
 
@@ -801,9 +799,9 @@ switch ($action) {
                     new Exception(Lang::T("Devices Not Found"));
                 }
             }
-            r2(U . 'services/pppoe', 's', Lang::T('Data Updated Successfully'));
+            r2(getUrl('services/pppoe'), 's', Lang::T('Data Updated Successfully'));
         } else {
-            r2(U . 'services/pppoe-edit/' . $id, 'e', $msg);
+            r2(getUrl('services/pppoe-edit/') . $id, 'e', $msg);
         }
         break;
     case 'balance':
@@ -819,12 +817,12 @@ switch ($action) {
 
         $ui->assign('d', $d);
         run_hook('view_list_balance'); #HOOK
-        $ui->display('balance.tpl');
+        $ui->display('admin/balance/list.tpl');
         break;
     case 'balance-add':
         $ui->assign('_title', Lang::T('Balance Plans'));
         run_hook('view_add_balance'); #HOOK
-        $ui->display('balance-add.tpl');
+        $ui->display('admin/balance/add.tpl');
         break;
     case 'balance-edit':
         $ui->assign('_title', Lang::T('Balance Plans'));
@@ -832,7 +830,7 @@ switch ($action) {
         $d = ORM::for_table('tbl_plans')->find_one($id);
         $ui->assign('d', $d);
         run_hook('view_edit_balance'); #HOOK
-        $ui->display('balance-edit.tpl');
+        $ui->display('admin/balance/edit.tpl');
         break;
     case 'balance-delete':
         $id = $routes['2'];
@@ -841,7 +839,7 @@ switch ($action) {
         if ($d) {
             run_hook('delete_balance'); #HOOK
             $d->delete();
-            r2(U . 'services/balance', 's', Lang::T('Data Deleted Successfully'));
+            r2(getUrl('services/balance'), 's', Lang::T('Data Deleted Successfully'));
         }
         break;
     case 'balance-edit-post':
@@ -877,9 +875,9 @@ switch ($action) {
             $d->prepaid = 'yes';
             $d->save();
 
-            r2(U . 'services/balance', 's', Lang::T('Data Updated Successfully'));
+            r2(getUrl('services/balance'), 's', Lang::T('Data Updated Successfully'));
         } else {
-            r2(U . 'services/balance-edit/' . $id, 'e', $msg);
+            r2(getUrl('services/balance-edit/') . $id, 'e', $msg);
         }
         break;
     case 'balance-add-post':
@@ -914,14 +912,13 @@ switch ($action) {
             $d->prepaid = 'yes';
             $d->save();
 
-            r2(U . 'services/balance', 's', Lang::T('Data Created Successfully'));
+            r2(getUrl('services/balance'), 's', Lang::T('Data Created Successfully'));
         } else {
-            r2(U . 'services/balance-add', 'e', $msg);
+            r2(getUrl('services/balance-add'), 'e', $msg);
         }
         break;
     case 'vpn':
         $ui->assign('_title', Lang::T('VPN Plans'));
-        $ui->assign('xfooter', '<script type="text/javascript" src="ui/lib/c/pppoe.js"></script>');
 
         $name = _post('name');
         $name = _req('name');
@@ -1009,7 +1006,7 @@ switch ($action) {
 
         $ui->assign('d', $d);
         run_hook('view_list_vpn'); #HOOK
-        $ui->display('vpn.tpl');
+        $ui->display('admin/vpn/list.tpl');
         break;
 
     case 'vpn-add':
@@ -1028,7 +1025,7 @@ switch ($action) {
         }
         $ui->assign('devices', $devices);
         run_hook('view_add_vpn'); #HOOK
-        $ui->display('vpn-add.tpl');
+        $ui->display('admin/vpn/add.tpl');
         break;
 
     case 'vpn-edit':
@@ -1071,9 +1068,9 @@ switch ($action) {
             }
             $ui->assign('exps', $exps);
             run_hook('view_edit_vpn'); #HOOK
-            $ui->display('vpn-edit.tpl');
+            $ui->display('admin/vpn/edit.tpl');
         } else {
-            r2(U . 'services/vpn', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('services/vpn'), 'e', Lang::T('Account Not Found'));
         }
         break;
 
@@ -1095,7 +1092,7 @@ switch ($action) {
             }
             $d->delete();
 
-            r2(U . 'services/vpn', 's', Lang::T('Data Deleted Successfully'));
+            r2(getUrl('services/vpn'), 's', Lang::T('Data Deleted Successfully'));
         }
         break;
 
@@ -1193,9 +1190,9 @@ switch ($action) {
                     new Exception(Lang::T("Devices Not Found"));
                 }
             }
-            r2(U . 'services/vpn', 's', Lang::T('Data Created Successfully'));
+            r2(getUrl('services/vpn'), 's', Lang::T('Data Created Successfully'));
         } else {
-            r2(U . 'services/vpn-add', 'e', $msg);
+            r2(getUrl('services/vpn-add'), 'e', $msg);
         }
         break;
 
@@ -1294,11 +1291,11 @@ switch ($action) {
                     new Exception(Lang::T("Devices Not Found"));
                 }
             }
-            r2(U . 'services/vpn', 's', Lang::T('Data Updated Successfully'));
+            r2(getUrl('services/vpn'), 's', Lang::T('Data Updated Successfully'));
         } else {
-            r2(U . 'services/vpn-edit/' . $id, 'e', $msg);
+            r2(getUrl('services/vpn-edit/') . $id, 'e', $msg);
         }
         break;
     default:
-        $ui->display('a404.tpl');
+        $ui->display('admin/404.tpl');
 }

@@ -50,7 +50,7 @@ switch ($action) {
             }
         }
         $ui->assign('devices', $devices);
-        $ui->display('app-devices.tpl');
+        $ui->display('admin/settings/devices.tpl');
         break;
     case 'app':
         if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin'])) {
@@ -59,19 +59,19 @@ switch ($action) {
 
         if (!empty(_get('testWa'))) {
             $result = Message::sendWhatsapp(_get('testWa'), 'PHPNuxBill Test Whatsapp');
-            r2(U . "settings/app", 's', 'Test Whatsapp has been send<br>Result: ' . $result);
+            r2(getUrl('settings/app'), 's', 'Test Whatsapp has been send<br>Result: ' . $result);
         }
         if (!empty(_get('testSms'))) {
             $result = Message::sendSMS(_get('testSms'), 'PHPNuxBill Test SMS');
-            r2(U . "settings/app", 's', 'Test SMS has been send<br>Result: ' . $result);
+            r2(getUrl('settings/app'), 's', 'Test SMS has been send<br>Result: ' . $result);
         }
         if (!empty(_get('testEmail'))) {
             Message::sendEmail(_get('testEmail'), 'PHPNuxBill Test Email', 'PHPNuxBill Test Email Body');
-            r2(U . "settings/app", 's', 'Test Email has been send');
+            r2(getUrl('settings/app'), 's', 'Test Email has been send');
         }
         if (!empty(_get('testTg'))) {
             $result = Message::sendTelegram('PHPNuxBill Test Telegram');
-            r2(U . "settings/app", 's', 'Test Telegram has been send<br>Result: ' . $result);
+            r2(getUrl('settings/app'), 's', 'Test Telegram has been send<br>Result: ' . $result);
         }
 
         $UPLOAD_URL_PATH = str_replace($root_path, '',  $UPLOAD_PATH);
@@ -105,7 +105,7 @@ switch ($action) {
         } else {
             $favicon = $UPLOAD_URL_PATH . DIRECTORY_SEPARATOR . 'favicon.default.png';
         }
-        
+
         $ui->assign('login_logo', $login_logo);
         $ui->assign('wallpaper', $wallpaper);
         $ui->assign('favicon', $favicon);
@@ -165,7 +165,7 @@ switch ($action) {
         run_hook('view_app_settings'); #HOOK
         $csrf_token = Csrf::generateAndStoreToken();
         $ui->assign('csrf_token', $csrf_token);
-        $ui->display('app-settings.tpl');
+        $ui->display('admin/settings/app.tpl');
         break;
 
     case 'app-post':
@@ -173,13 +173,14 @@ switch ($action) {
             _alert(Lang::T('You do not have permission to access this page'), 'danger', "dashboard");
         }
         $csrf_token = _post('csrf_token');
+
         if (!Csrf::check($csrf_token)) {
-            r2(U . 'settings/app', 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
+            r2(getUrl('settings/app'), 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
         }
         $company = _post('CompanyName');
         $custom_tax_rate = filter_var(_post('custom_tax_rate'), FILTER_SANITIZE_SPECIAL_CHARS);
         if (preg_match('/[^0-9.]/', $custom_tax_rate)) {
-            r2(U . 'settings/app', 'e', 'Special characters are not allowed in tax rate');
+            r2(getUrl('settings/app'), 'e', 'Special characters are not allowed in tax rate');
             die();
         }
         run_hook('save_settings'); #HOOK
@@ -189,11 +190,11 @@ switch ($action) {
                 File::resizeCropImage($_FILES['logo']['tmp_name'], $UPLOAD_PATH . DIRECTORY_SEPARATOR . 'logo.png', 1078, 200, 100);
                 if (file_exists($_FILES['logo']['tmp_name'])) unlink($_FILES['logo']['tmp_name']);
             } else {
-                r2(U . 'settings/app', 'e', 'PHP GD is not installed');
+                r2(getUrl('settings/app'), 'e', 'PHP GD is not installed');
             }
         }
         if ($_POST['general'] && $company == '') {
-            r2(U . 'settings/app', 'e', Lang::T('All field is required'));
+            r2(getUrl('settings/app'), 'e', Lang::T('All field is required'));
         } else {
             if ($radius_enable) {
                 try {
@@ -204,7 +205,7 @@ switch ($action) {
                     $ui->assign("error_message", "Radius table not found.<br><br>" .
                         $e->getMessage() .
                         "<br><br>Download <a href=\"https://raw.githubusercontent.com/hotspotbilling/phpnuxbill/Development/install/radius.sql\">here</a> or <a href=\"https://raw.githubusercontent.com/hotspotbilling/phpnuxbill/master/install/radius.sql\">here</a> and import it to database.<br><br>Check config.php for radius connection details");
-                    $ui->display('error.tpl');
+                    $ui->display('admin/error.tpl');
                     die();
                 }
             }
@@ -229,7 +230,7 @@ switch ($action) {
             }
             _log('[' . $admin['username'] . ']: ' . Lang::T('Settings Saved Successfully'), $admin['user_type'], $admin['id']);
 
-            r2(U . 'settings/app', 's', Lang::T('Settings Saved Successfully'));
+            r2(getUrl('settings/app'), 's', Lang::T('Settings Saved Successfully'));
         }
         break;
 
@@ -242,20 +243,20 @@ switch ($action) {
         $csrf_token = _post('csrf_token');
 
         if (!Csrf::check($csrf_token)) {
-            r2(U . 'settings/app', 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
+            r2(getUrl('settings/app'), 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
         }
 
         if ($login_page_type == 'custom' && (empty($login_Page_template) || empty($login_page_title) || empty($login_page_description))) {
-            r2(U . 'settings/app', 'e', 'Please fill all required fields');
+            r2(getUrl('settings/app'), 'e', 'Please fill all required fields');
             return;
         }
 
         if (strlen($login_page_title) > 25) {
-            r2(U . 'settings/app', 'e', 'Login page title must not exceed 25 characters');
+            r2(getUrl('settings/app'), 'e', 'Login page title must not exceed 25 characters');
             return;
         }
         if (strlen($login_page_description) > 100) {
-            r2(U . 'settings/app', 'e', 'Login page description must not exceed 50 characters');
+            r2(getUrl('settings/app'), 'e', 'Login page description must not exceed 50 characters');
             return;
         }
 
@@ -278,7 +279,7 @@ switch ($action) {
                 $settings['login_page_favicon'] = basename($favicon_path); // Save dynamic file name
                 if (file_exists($_FILES['login_page_favicon']['tmp_name'])) unlink($_FILES['login_page_favicon']['tmp_name']);
             } else {
-                r2(U . 'settings/app', 'e', 'Favicon must be a JPG, JPEG, or PNG image.');
+                r2(getUrl('settings/app'), 'e', 'Favicon must be a JPG, JPEG, or PNG image.');
             }
         }
 
@@ -291,7 +292,7 @@ switch ($action) {
                 $settings['login_page_wallpaper'] = basename($wallpaper_path); // Save dynamic file name
                 if (file_exists($_FILES['login_page_wallpaper']['tmp_name'])) unlink($_FILES['login_page_wallpaper']['tmp_name']);
             } else {
-                r2(U . 'settings/app', 'e', 'Wallpaper must be a JPG, JPEG, or PNG image.');
+                r2(getUrl('settings/app'), 'e', 'Wallpaper must be a JPG, JPEG, or PNG image.');
             }
         }
 
@@ -304,7 +305,7 @@ switch ($action) {
                 $settings['login_page_logo'] = basename($logo_path); // Save dynamic file name
                 if (file_exists($_FILES['login_page_logo']['tmp_name'])) unlink($_FILES['login_page_logo']['tmp_name']);
             } else {
-                r2(U . 'settings/app', 'e', 'Logo must be a JPG, JPEG, or PNG image.');
+                r2(getUrl('settings/app'), 'e', 'Logo must be a JPG, JPEG, or PNG image.');
             }
         }
 
@@ -322,7 +323,7 @@ switch ($action) {
         }
 
         _log('[' . $admin['username'] . ']: ' . Lang::T('Login Page Settings Saved Successfully'), $admin['user_type'], $admin['id']);
-        r2(U . 'settings/app', 's', Lang::T('Login Page Settings Saved Successfully'));
+        r2(getUrl('settings/app'), 's', Lang::T('Login Page Settings Saved Successfully'));
         break;
 
     case 'localisation':
@@ -351,7 +352,7 @@ switch ($action) {
         run_hook('view_localisation'); #HOOK
         $csrf_token = Csrf::generateAndStoreToken();
         $ui->assign('csrf_token', $csrf_token);
-        $ui->display('app-localisation.tpl');
+        $ui->display('admin/settings/localisation.tpl');
         break;
 
     case 'localisation-post':
@@ -360,7 +361,7 @@ switch ($action) {
         }
         $csrf_token = _post('csrf_token');
         if (!Csrf::check($csrf_token)) {
-            r2(U . 'settings/app', 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
+            r2(getUrl('settings/app'), 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
         }
         $tzone = _post('tzone');
         $date_format = _post('date_format');
@@ -368,7 +369,7 @@ switch ($action) {
         $lan = _post('lan');
         run_hook('save_localisation'); #HOOK
         if ($tzone == '' or $date_format == '' or $lan == '') {
-            r2(U . 'settings/app', 'e', Lang::T('All field is required'));
+            r2(getUrl('settings/app'), 'e', Lang::T('All field is required'));
         } else {
             $d = ORM::for_table('tbl_appconfig')->where('setting', 'timezone')->find_one();
             $d->value = $tzone;
@@ -453,7 +454,7 @@ switch ($action) {
             $d->value = $lan;
             $d->save();
             _log('[' . $admin['username'] . ']: ' . 'Settings Saved Successfully', $admin['user_type'], $admin['id']);
-            r2(U . 'settings/localisation', 's', 'Settings Saved Successfully');
+            r2(getUrl('settings/localisation'), 's', 'Settings Saved Successfully');
         }
         break;
 
@@ -526,7 +527,7 @@ switch ($action) {
         run_hook('view_list_admin'); #HOOK
         $csrf_token = Csrf::generateAndStoreToken();
         $ui->assign('csrf_token', $csrf_token);
-        $ui->display('admin.tpl');
+        $ui->display('admin/admin/list.tpl');
         break;
 
     case 'users-add':
@@ -537,7 +538,7 @@ switch ($action) {
         $ui->assign('csrf_token', $csrf_token);
         $ui->assign('_title', Lang::T('Add User'));
         $ui->assign('agents', ORM::for_table('tbl_users')->where('user_type', 'Agent')->find_many());
-        $ui->display('admin-add.tpl');
+        $ui->display('admin/admin/add.tpl');
         break;
     case 'users-view':
         $ui->assign('_title', Lang::T('Edit User'));
@@ -566,9 +567,9 @@ switch ($action) {
             $ui->assign('_title', $d['username']);
             $csrf_token = Csrf::generateAndStoreToken();
             $ui->assign('csrf_token', $csrf_token);
-            $ui->display('admin-view.tpl');
+            $ui->display('admin/admin/view.tpl');
         } else {
-            r2(U . 'settings/users', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('settings/users'), 'e', Lang::T('Account Not Found'));
         }
         break;
     case 'users-edit':
@@ -622,9 +623,9 @@ switch ($action) {
             run_hook('view_edit_admin'); #HOOK
             $csrf_token = Csrf::generateAndStoreToken();
             $ui->assign('csrf_token', $csrf_token);
-            $ui->display('admin-edit.tpl');
+            $ui->display('admin/admin/edit.tpl');
         } else {
-            r2(U . 'settings/users', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('settings/users'), 'e', Lang::T('Account Not Found'));
         }
         break;
 
@@ -635,15 +636,15 @@ switch ($action) {
 
         $id  = $routes['2'];
         if (($admin['id']) == $id) {
-            r2(U . 'settings/users', 'e', 'Sorry You can\'t delete yourself');
+            r2(getUrl('settings/users'), 'e', 'Sorry You can\'t delete yourself');
         }
         $d = ORM::for_table('tbl_users')->find_one($id);
         if ($d) {
             run_hook('delete_admin'); #HOOK
             $d->delete();
-            r2(U . 'settings/users', 's', Lang::T('User deleted Successfully'));
+            r2(getUrl('settings/users'), 's', Lang::T('User deleted Successfully'));
         } else {
-            r2(U . 'settings/users', 'e', Lang::T('Account Not Found'));
+            r2(getUrl('settings/users'), 'e', Lang::T('Account Not Found'));
         }
         break;
 
@@ -653,7 +654,7 @@ switch ($action) {
         }
         $csrf_token = _post('csrf_token');
         if (!Csrf::check($csrf_token)) {
-            r2(U . 'settings/users-add', 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
+            r2(getUrl('settings/users-add'), 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
         }
         $username = _post('username');
         $fullname = _post('fullname');
@@ -712,16 +713,16 @@ switch ($action) {
             }
 
             _log('[' . $admin['username'] . ']: ' . "Created $user_type <b>$username</b>", $admin['user_type'], $admin['id']);
-            r2(U . 'settings/users', 's', Lang::T('Account Created Successfully'));
+            r2(getUrl('settings/users'), 's', Lang::T('Account Created Successfully'));
         } else {
-            r2(U . 'settings/users-add', 'e', $msg);
+            r2(getUrl('settings/users-add'), 'e', $msg);
         }
         break;
 
     case 'users-edit-post':
         $csrf_token = _post('csrf_token');
         if (!Csrf::check($csrf_token)) {
-            r2(U . 'settings/users-edit/', 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
+            r2(getUrl('settings/users-edit/'), 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
         }
         $username = _post('username');
         $fullname = _post('fullname');
@@ -824,7 +825,7 @@ switch ($action) {
                     }
                     if (file_exists($_FILES['photo']['tmp_name'])) unlink($_FILES['photo']['tmp_name']);
                 } else {
-                    r2(U . 'settings/app', 'e', 'PHP GD is not installed');
+                    r2(getUrl('settings/app'), 'e', 'PHP GD is not installed');
                 }
             }
 
@@ -858,9 +859,9 @@ switch ($action) {
             $d->save();
 
             _log('[' . $admin['username'] . ']: $username ' . Lang::T('User Updated Successfully'), $admin['user_type'], $admin['id']);
-            r2(U . 'settings/users-view/' . $id, 's', 'User Updated Successfully');
+            r2(getUrl('settings/users-view/') . $id, 's', 'User Updated Successfully');
         } else {
-            r2(U . 'settings/users-edit/' . $id, 'e', $msg);
+            r2(getUrl('settings/users-edit/') . $id, 'e', $msg);
         }
         break;
 
@@ -868,14 +869,14 @@ switch ($action) {
         run_hook('view_change_password'); #HOOK
         $csrf_token = Csrf::generateAndStoreToken();
         $ui->assign('csrf_token', $csrf_token);
-        $ui->display('change-password.tpl');
+        $ui->display('admin/change-password.tpl');
         break;
 
     case 'change-password-post':
         $password = _post('password');
         $csrf_token = _post('csrf_token');
         if (!Csrf::check($csrf_token)) {
-            r2(U . 'settings/change-password', 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
+            r2(getUrl('settings/change-password'), 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
         }
         if ($password != '') {
             $d = ORM::for_table('tbl_users')->where('username', $admin['username'])->find_one();
@@ -886,10 +887,10 @@ switch ($action) {
                     $npass = _post('npass');
                     $cnpass = _post('cnpass');
                     if (!Validator::Length($npass, 15, 5)) {
-                        r2(U . 'settings/change-password', 'e', 'New Password must be 6 to 14 character');
+                        r2(getUrl('settings/change-password'), 'e', 'New Password must be 6 to 14 character');
                     }
                     if ($npass != $cnpass) {
-                        r2(U . 'settings/change-password', 'e', 'Both Password should be same');
+                        r2(getUrl('settings/change-password'), 'e', 'Both Password should be same');
                     }
 
                     $npass = Password::_crypt($npass);
@@ -899,15 +900,15 @@ switch ($action) {
                     _msglog('s', Lang::T('Password changed successfully, Please login again'));
                     _log('[' . $admin['username'] . ']: Password changed successfully', $admin['user_type'], $admin['id']);
 
-                    r2(U . 'admin');
+                    r2(getUrl('admin'));
                 } else {
-                    r2(U . 'settings/change-password', 'e', Lang::T('Incorrect Current Password'));
+                    r2(getUrl('settings/change-password'), 'e', Lang::T('Incorrect Current Password'));
                 }
             } else {
-                r2(U . 'settings/change-password', 'e', Lang::T('Incorrect Current Password'));
+                r2(getUrl('settings/change-password'), 'e', Lang::T('Incorrect Current Password'));
             }
         } else {
-            r2(U . 'settings/change-password', 'e', Lang::T('Incorrect Current Password'));
+            r2(getUrl('settings/change-password'), 'e', Lang::T('Incorrect Current Password'));
         }
         break;
 
@@ -925,7 +926,7 @@ switch ($action) {
         $csrf_token = Csrf::generateAndStoreToken();
         $ui->assign('csrf_token', $csrf_token);
         $ui->assign('_default', json_decode(file_get_contents($UPLOAD_PATH . DIRECTORY_SEPARATOR . 'notifications.default.json'), true));
-        $ui->display('app-notifications.tpl');
+        $ui->display('admin/settings/notifications.tpl');
         break;
     case 'notifications-post':
         if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin'])) {
@@ -933,10 +934,10 @@ switch ($action) {
         }
         $csrf_token = _post('csrf_token');
         if (!Csrf::check($csrf_token)) {
-            r2(U . 'settings/notifications', 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
+            r2(getUrl('settings/notifications'), 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
         }
         file_put_contents($UPLOAD_PATH . "/notifications.json", json_encode($_POST));
-        r2(U . 'settings/notifications', 's', Lang::T('Settings Saved Successfully'));
+        r2(getUrl('settings/notifications'), 's', Lang::T('Settings Saved Successfully'));
         break;
     case 'dbstatus':
         if (!in_array($admin['user_type'], ['SuperAdmin', 'Admin'])) {
@@ -952,7 +953,7 @@ switch ($action) {
             }
             $ui->assign('tables', $tables);
             run_hook('view_database'); #HOOK
-            $ui->display('dbstatus.tpl');
+            $ui->display('admin/settings/dbstatus.tpl');
         }
         break;
 
@@ -1025,9 +1026,9 @@ switch ($action) {
             } catch (Exception $e) {
             }
             if (file_exists($_FILES['json']['tmp_name'])) unlink($_FILES['json']['tmp_name']);
-            r2(U . "settings/dbstatus", 's', "Restored $suc success $fal failed");
+            r2(getUrl('settings/dbstatus'), 's', "Restored $suc success $fal failed");
         } else {
-            r2(U . "settings/dbstatus", 'e', 'Upload failed');
+            r2(getUrl('settings/dbstatus'), 'e', 'Upload failed');
         }
         break;
     case 'language':
@@ -1042,16 +1043,16 @@ switch ($action) {
         }
         $csrf_token = Csrf::generateAndStoreToken();
         $ui->assign('csrf_token', $csrf_token);
-        $ui->display('language-add.tpl');
+        $ui->display('admin/settings/language-add.tpl');
         break;
 
     case 'lang-post':
         $csrf_token = _post('csrf_token');
         if (!Csrf::check($csrf_token)) {
-            r2(U . 'settings/language', 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
+            r2(getUrl('settings/language'), 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
         }
         file_put_contents($lan_file, json_encode($_POST, JSON_PRETTY_PRINT));
-        r2(U . 'settings/language', 's', Lang::T('Translation saved Successfully'));
+        r2(getUrl('settings/language'), 's', Lang::T('Translation saved Successfully'));
         break;
 
     case 'maintenance':
@@ -1063,7 +1064,7 @@ switch ($action) {
         if (_post('save') == 'save') {
             $csrf_token = _post('csrf_token');
             if (!Csrf::check($csrf_token)) {
-                r2(U . 'settings/maintenance', 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
+                r2(getUrl('settings/maintenance'), 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
             }
             $status = isset($_POST['maintenance_mode']) ? 1 : 0; // Checkbox returns 1 if checked, otherwise 0
             $force_logout = isset($_POST['maintenance_mode_logout']) ? 1 : 0; // Checkbox returns 1 if checked, otherwise 0
@@ -1088,13 +1089,13 @@ switch ($action) {
                 }
             }
 
-            r2(U . "settings/maintenance", 's', Lang::T('Settings Saved Successfully'));
+            r2(getUrl('settings/maintenance'), 's', Lang::T('Settings Saved Successfully'));
         }
         $csrf_token = Csrf::generateAndStoreToken();
         $ui->assign('csrf_token', $csrf_token);
         $ui->assign('_c', $config);
         $ui->assign('_title', Lang::T('Maintenance Mode Settings'));
-        $ui->display('maintenance-mode.tpl');
+        $ui->display('admin/settings/maintenance-mode.tpl');
         break;
 
     case 'miscellaneous':
@@ -1105,7 +1106,7 @@ switch ($action) {
         if (_post('save') == 'save') {
             $csrf_token = _post('csrf_token');
             if (!Csrf::check($csrf_token)) {
-                r2(U . 'settings/miscellaneous', 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
+                r2(getUrl('settings/miscellaneous'), 'e', Lang::T('Invalid or Expired CSRF Token') . ".");
             }
             foreach ($_POST as $key => $value) {
                 $d = ORM::for_table('tbl_appconfig')->where('setting', $key)->find_one();
@@ -1120,15 +1121,15 @@ switch ($action) {
                 }
             }
 
-            r2(U . "settings/miscellaneous", 's', Lang::T('Settings Saved Successfully'));
+            r2(getUrl('settings/miscellaneous'), 's', Lang::T('Settings Saved Successfully'));
         }
         $csrf_token = Csrf::generateAndStoreToken();
         $ui->assign('csrf_token', $csrf_token);
         $ui->assign('_c', $config);
         $ui->assign('_title', Lang::T('Miscellaneous Settings'));
-        $ui->display('app-miscellaneous.tpl');
+        $ui->display('admin/settings/miscellaneous.tpl');
         break;
 
     default:
-        $ui->display('a404.tpl');
+        $ui->display('admin/404.tpl');
 }
