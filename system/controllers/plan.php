@@ -269,6 +269,17 @@ switch ($action) {
             r2(getUrl('plan/view/') . $id, 'd', "Customer not found");
         }
         Package::createInvoice($in);
+        $UPLOAD_URL_PATH = str_replace($root_path, '', $UPLOAD_PATH);
+        $logo = '';
+        if (file_exists($UPLOAD_PATH . DIRECTORY_SEPARATOR . 'logo.png')) {
+            $logo = $UPLOAD_URL_PATH . DIRECTORY_SEPARATOR . 'logo.png';
+            $imgsize = getimagesize($logo);
+            $width = $imgsize[0];
+            $height = $imgsize[1];
+            $ui->assign('wlogo', $width);
+            $ui->assign('hlogo', $height);
+        }
+        $ui->assign('logo', $logo);
         $ui->assign('_title', 'View Invoice');
         $ui->display('admin/plan/invoice.tpl');
         break;
@@ -1062,11 +1073,11 @@ switch ($action) {
             } else {
                 r2(getUrl('plan'), 's', "Customer not found");
             }
-            Message::sendTelegram("#u$tur[username] #extend #" . $p['type'] . " \n" . $p['name_plan'] .
+            Message::sendTelegram("#u$tur[username] #id$tur[customer_id]  #extend by $admin[fullname] #" . $p['type'] . " \n" . $p['name_plan'] .
                 "\nLocation: " . $p['routers'] .
                 "\nCustomer: " . $c['fullname'] .
                 "\nNew Expired: " . Lang::dateAndTimeFormat($expiration, $tur['time']));
-            _log("$admin[fullname] extend Customer $tur[customer_id] $tur[username] for $days days", $admin['user_type'], $admin['id']);
+            _log("$admin[fullname] extend Customer $tur[customer_id] $tur[username] #$tur[customer_id] for $days days", $admin['user_type'], $admin['id']);
             r2(getUrl('plan'), 's', "Extend until $expiration");
         } else {
             r2(getUrl('plan'), 's', "Customer is not expired yet");
