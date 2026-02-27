@@ -97,7 +97,7 @@
                                             <a href="{Text::url('customers/viewu/')}{$ds['username']}">{$ds['username']}</a>
                                         {/if}
                                     </td>
-									<td>{$ds['fullname']}</td>
+									<td>{$ds['fullname']|escape:'html'}</td>
                                     <td>
                                         {if $ds['type'] == 'Hotspot'}
                                             <a href="{Text::url('')}services/edit/{$ds['plan_id']}">{$ds['namebp']}</a>
