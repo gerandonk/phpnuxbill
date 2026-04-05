@@ -387,6 +387,17 @@ function process_radiust_rest($tur, $code)
 
     $attrs = [];
     $timeexp = strtotime($tur['expiration'] . ' ' . $tur['time']);
+  // --- Kode pengecekan masa aktif ---
+    if ($timeexp < time()) {
+        show_radius_result([
+            "control:Auth-Type" => "Reject",
+            "reply:Reply-Message" => "Sorry, your account's active period has expired (" . $tur['expiration'] . ")"
+        ], 401);
+        exit;
+    }
+    // --- AKHIR KODE TAMBAHAN ---
+
+    
     $attrs['reply:Reply-Message'] = 'success';
     $attrs['Simultaneous-Use'] = $plan['shared_users'];
     $attrs['reply:Mikrotik-Wireless-Comment'] = $plan['name_plan'] . ' | ' . $tur['expiration'] . ' ' . $tur['time'];
