@@ -10,7 +10,21 @@
  *    - is it allow to login
  * Accounting
  *    - log
- **/
+ *
+ * MYSQL TUNING
+ *
+ * [mysqld]
+ * # Increase max connections (adjust according to server RAM).
+ * # Rough estimate: ~10MB per connection for buffer
+ * max_connections = 500
+
+ * # Close idle connections sooner (default 28800 = 8 hours!)
+ * wait_timeout = 60
+ * interactive_timeout = 60
+
+ * # Ensure persistent connections do not disconnect prematurely
+ * max_allowed_packet = 64M
+ */
 
 header("Content-Type: application/json");
 
@@ -42,7 +56,7 @@ try {
             $CHAPchallenge = _req('CHAPchallenge');
             $isCHAP = false;
             if (!empty($CHAPassword)) {
-                $c = ORM::for_table('tbl_customers')->select('password')->select('pppoe_password')->whereRaw("BINARY username = ? AND status = 'Active'", array($username))->find_one();
+                $c = ORM::for_table('tbl_customers')->select('password')->select('pppoe_password')->whereRaw("(BINARY username = ? OR BINARY pppoe_username = ?) AND status = 'Active'", array($username, $username))->find_one();
                 if ($c) {
                     if (Password::chap_verify($c['password'], $CHAPassword, $CHAPchallenge)) {
                         $password = $c['password'];
@@ -64,33 +78,6 @@ try {
                                 $password = $username;
                             } else {
                                 show_radius_result(['Reply-Message' => 'Username or Password is wrong'], 401);
-                            }
-                        }
-                    }
-                } else {
-                    $c = ORM::for_table('tbl_customers')->select('password')->select('pppoe_password')->whereRaw("BINARY pppoe_username = ? AND status = 'Active'", array($username))->find_one();
-                    if ($c) {
-                        if (Password::chap_verify($c['password'], $CHAPassword, $CHAPchallenge)) {
-                            $password = $c['password'];
-                            $isVoucher = false;
-                            $isCHAP = true;
-                        } else if (!empty($c['pppoe_password']) && Password::chap_verify($c['pppoe_password'], $CHAPassword, $CHAPchallenge)) {
-                            $password = $c['pppoe_password'];
-                            $isVoucher = false;
-                            $isCHAP = true;
-                        } else {
-                            // check if voucher
-                            if (Password::chap_verify($username, $CHAPassword, $CHAPchallenge)) {
-                                $isVoucher = true;
-                                $password = $username;
-                            } else {
-                                // no password is voucher
-                                if (Password::chap_verify('', $CHAPassword, $CHAPchallenge)) {
-                                    $isVoucher = true;
-                                    $password = $username;
-                                } else {
-                                    show_radius_result(['Reply-Message' => 'Username or Password is wrong'], 401);
-                                }
                             }
                         }
                     }
@@ -136,57 +123,31 @@ try {
             $CHAPchallenge = _req('CHAPchallenge');
             $isCHAP = false;
             if (!empty($CHAPassword)) {
-                $c = ORM::for_table('tbl_customers')->select('password')->select('pppoe_password')->whereRaw("BINARY username = ? AND status = 'Active'", array($username))->find_one();
+                $inputUsername = $username;
+                $c = ORM::for_table('tbl_customers')->select('password')->select('username')->select('pppoe_password')->whereRaw("(BINARY username = ? OR BINARY pppoe_username = ?) AND status = 'Active'", array($username, $username))->find_one();
                 if ($c) {
                     if (Password::chap_verify($c['password'], $CHAPassword, $CHAPchallenge)) {
                         $password = $c['password'];
+                        $username = $c['username'];
                         $isVoucher = false;
                         $isCHAP = true;
                     } else if (!empty($c['pppoe_password']) && Password::chap_verify($c['pppoe_password'], $CHAPassword, $CHAPchallenge)) {
                         $password = $c['pppoe_password'];
+                        $username = $c['username'];
                         $isVoucher = false;
                         $isCHAP = true;
                     } else {
                         // check if voucher
-                        if (Password::chap_verify($username, $CHAPassword, $CHAPchallenge)) {
+                        if (Password::chap_verify($inputUsername, $CHAPassword, $CHAPchallenge)) {
                             $isVoucher = true;
-                            $password = $username;
+                            $password = $inputUsername;
                         } else {
                             // no password is voucher
                             if (Password::chap_verify('', $CHAPassword, $CHAPchallenge)) {
                                 $isVoucher = true;
-                                $password = $username;
+                                $password = $inputUsername;
                             } else {
                                 show_radius_result(['Reply-Message' => 'Username or Password is wrong'], 401);
-                            }
-                        }
-                    }
-                } else {
-                    $c = ORM::for_table('tbl_customers')->select('password')->select('username')->select('pppoe_password')->whereRaw("BINARY pppoe_username = ? AND status = 'Active'", array($username))->find_one();
-                    if ($c) {
-                        if (Password::chap_verify($c['password'], $CHAPassword, $CHAPchallenge)) {
-                            $password = $c['password'];
-                            $username = $c['username'];
-                            $isVoucher = false;
-                            $isCHAP = true;
-                        } else if (!empty($c['pppoe_password']) && Password::chap_verify($c['pppoe_password'], $CHAPassword, $CHAPchallenge)) {
-                            $password = $c['pppoe_password'];
-                            $username = $c['username'];
-                            $isVoucher = false;
-                            $isCHAP = true;
-                        } else {
-                            // check if voucher
-                            if (Password::chap_verify($username, $CHAPassword, $CHAPchallenge)) {
-                                $isVoucher = true;
-                                $password = $username;
-                            } else {
-                                // no password is voucher
-                                if (Password::chap_verify('', $CHAPassword, $CHAPchallenge)) {
-                                    $isVoucher = true;
-                                    $password = $username;
-                                } else {
-                                    show_radius_result(['Reply-Message' => 'Username or Password is wrong'], 401);
-                                }
                             }
                         }
                     }
